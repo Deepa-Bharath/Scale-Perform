@@ -1,5 +1,6 @@
 import { Router, Request, Response } from "express";
-import { GenerateProductsService } from "../services/generate-product.js";
+import { GenerateProductsService } from "../services/generateProducts.js";
+import { GetProductsService } from "../services/getProducts.js";
 export const router = Router();
 const DB_TYPE = process.env.DB_TYPE || "mongodb";
 
@@ -10,6 +11,6 @@ router.post("/generate-products", (req: Request, res: Response) => {
 });
 
 router.post("/get-products", (req: Request, res: Response) => {
-    const result = GenerateProductsService.getProducts(DB_TYPE);
+    const result = GetProductsService.getProducts();
     res.json(result);
 });

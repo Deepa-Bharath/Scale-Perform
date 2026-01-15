@@ -1,5 +1,5 @@
 import { RepositoryType } from "../shared/types";  
-import { MongoDBRepository } from "./mongoDB/repository.js";
+import { MongoDBRepository } from "./mongoDB/mongoRepository.js";
 // import { PostgreSQLRepository } from "./postgreSQL/repository.js"; --- IGNORE ---
 
 export class RepositoryFactory {

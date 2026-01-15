@@ -9,6 +9,8 @@ import { config } from "dotenv";
 import { connectMongoDB } from "./infrastructure/mongoDB/connection.js";
 import { RepositoryFactory } from "./infrastructure/repository.js";
 import { RepositoryType } from "./shared/types.js";
+import { ProductDataMethods } from "./infrastructure/ProductRepository.js";
+
 // Load environment variables
 config();
 
@@ -35,7 +37,7 @@ app.use("/api", router);
 // Start server (connect to DB first)
 const PORT = Number(process.env.PORT) || 5000;
 const mongoURI = process.env.MONGO_URI || "";
-let repository;
+let repository: ProductDataMethods;
 async function start() {
   if (!mongoURI) {
     console.error("MONGO_URI is not defined in environment");

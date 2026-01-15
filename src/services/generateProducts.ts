@@ -1,4 +1,4 @@
-import {GenerateProductsController} from '../controllers/generate_products.js';
+import {GenerateProductsController} from '../controllers/generateProducts.js';
 import { Response } from "../shared/types.js";
 
 export class GenerateProductsService {

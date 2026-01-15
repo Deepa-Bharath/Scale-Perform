@@ -1,11 +1,11 @@
 import { Response } from "../shared/types.js";
-import { repository } from "../index.js";
+import { getProducts } from "../controllers/getProducts.js";
 
 
 export class GetProductsService {
-    static getProducts(): Response {
+    static async getProducts(): Promise<Response> {
         try {
-            const products = repository.getAll();
+            const products = await getProducts();
             
             return {    
                 statusCode: 200,
