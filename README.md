@@ -1,6 +1,10 @@
-# TypeScript Docker Template 🚀
+# Scale-Perform: High-Performance API 🚀
 
-Production-ready TypeScript + Docker setup with hot reload for Node.js applications.
+A production-ready TypeScript + Docker application demonstrating API scalability and performance optimization techniques. This project creates a dummy GET API that efficiently handles multiple resources while maintaining optimal performance under load.
+
+## Project Overview
+
+Scale-Perform is designed to showcase best practices for building scalable Node.js APIs with Docker containerization. It includes a dummy GET API endpoint that retrieves and serves multiple resources, with performance monitoring and optimization strategies implemented throughout.
 
 ## Features
 - ⚡ Hot reload in development
