@@ -1,7 +1,7 @@
 // save product data to both database connected in the application
-import { Product } from "../shared/types.js";
+import { type Product } from "../../domain/entities/Product.js";
 
-export interface ProductDataMethods {
+export interface ProductRepository {
     getAll(): Promise<Product[]>;
     save(products: Product[]): Promise<void>;
 }

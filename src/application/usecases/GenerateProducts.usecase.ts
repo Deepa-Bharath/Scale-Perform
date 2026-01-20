@@ -1,15 +1,20 @@
 import fs from "fs";
 import path from "path";
-import { Product } from "../shared/types.js";
+import { type Product } from "../../domain/entities/Product.js";
+import { type ProductRepository } from "../../domain/repositories/ProductRepository.js";
 
-export class GenerateProductsController {
-  private static readonly PRODUCT_COUNT = 5000;
-  private static readonly OUTPUT_FILE = "products_1000.json";
+export class GenerateProductsUseCase {
+  private readonly PRODUCT_COUNT = 50000;
+  private readonly OUTPUT_FILE = "products_1000.json";
 
-  static generateProducts(): void {
+  constructor(private repository: ProductRepository) {}
+
+
+   async execute(): Promise<void> {
     try {
       const products = this.generateProductData();
-      this.saveProductsToFile(products);
+      //this.saveProductsToFile(products);
+      await this.repository.save(products);
       console.log(`[GenerateProductsController] Successfully generated ${products.length} products`);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
@@ -18,7 +23,7 @@ export class GenerateProductsController {
     }
   }
 
-  private static generateProductData(): Product[] {
+  private  generateProductData(): Product[] {
     const products: Product[] = [];
 
     for (let i = 1; i <= this.PRODUCT_COUNT; i++) {
@@ -37,13 +42,13 @@ export class GenerateProductsController {
     return products;
   }
 
-  private static getCategoryByIndex(index: number): string {
+  private  getCategoryByIndex(index: number): string {
     if (index % 3 === 0) return "eco-products";
     if (index % 3 === 1) return "personal-care";
     return "kits";
   }
 
-  private static saveProductsToFile(products: Product[]): void {
+  private  saveProductsToFile(products: Product[]): void {
     try {
       const filePath = path.join(process.cwd(), this.OUTPUT_FILE);
       fs.writeFileSync(filePath, JSON.stringify(products, null, 2));

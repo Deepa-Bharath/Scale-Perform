@@ -3,13 +3,10 @@ import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import morgan from "morgan";
-import { router } from "./routes/routes.js";
+import { router } from "./interfaces/http/routes.js";
 // Middleware setup
 import { config } from "dotenv";
-import { connectMongoDB } from "./infrastructure/mongoDB/connection.js";
-import { RepositoryFactory } from "./infrastructure/repository.js";
-import { RepositoryType } from "./shared/types.js";
-import { ProductDataMethods } from "./infrastructure/ProductRepository.js";
+import { connectMongoDB } from "./infrastructure/db/mongo/connection.js";
 
 // Load environment variables
 config();
@@ -37,7 +34,6 @@ app.use("/api", router);
 // Start server (connect to DB first)
 const PORT = Number(process.env.PORT) || 5000;
 const mongoURI = process.env.MONGO_URI || "";
-let repository: ProductDataMethods;
 async function start() {
   if (!mongoURI) {
     console.error("MONGO_URI is not defined in environment");
@@ -48,10 +44,7 @@ async function start() {
     await connectMongoDB(mongoURI);
     app.listen(PORT, () => {
       console.log(`Server is running on port ${PORT}`);
-    });
-    const type = process.env.DB_TYPE || "mongodb";
-    repository = RepositoryFactory.createRepository(type as RepositoryType);
-    console.log(`[Index] Repository of type '${type}' initialized:`, repository);
+    });   
   } catch (error) {
     console.error("Failed to start server:", error);
     process.exit(1);
@@ -60,4 +53,4 @@ async function start() {
 
 start();
 
-export { app, repository};
+export { app };

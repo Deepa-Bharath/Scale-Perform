@@ -6,6 +6,33 @@ A production-ready TypeScript + Docker application demonstrating API scalability
 
 Scale-Perform is designed to showcase best practices for building scalable Node.js APIs with Docker containerization. It includes a dummy GET API endpoint that retrieves and serves multiple resources, with performance monitoring and optimization strategies implemented throughout.
 
+## Architecture
+Client (HTTP)
+   ↓
+Interfaces (Controllers, Routes)
+   ↓
+Application (Use Cases)
+   ↓
+Domain (Entities, Repository Interfaces)
+   ↑
+Infrastructure (MongoDB, ORM, DB Connection)
+
+### Why this Architecture?
+
+This project is designed as a read-heavy API with the following long-term goals:
+
+High read performance
+
+Clear separation of concerns
+
+Ability to switch databases (Mongo today, others later)
+
+Easy observability (metrics, latency, DB timing)
+
+Docker-first, production-like setup
+
+To achieve these goals, we chose Hexagonal Architecture, also known as Ports & Adapters.
+
 ## Features
 - ⚡ Hot reload in development
 - 🐳 Multi-stage Docker builds
