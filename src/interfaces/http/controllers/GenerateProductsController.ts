@@ -1,16 +1,21 @@
 import { GenerateProductsUseCase } from "../../../application/usecases/GenerateProducts.usecase.js";
+import { type Response } from "../../../shared/types.js";
 
 export class GenerateProductsController {
   constructor(private useCase: GenerateProductsUseCase) {}
 
-  async handle(req: any, res: any): Promise<void> {
+  async handle(req: any, res: any): Promise<Response> {
     try {
       await this.useCase.execute();
-      res.status(200).json({ message: "Products generated successfully." });
+      return {
+        statusCode: 200, message: "Products generated successfully." , status: 'success'
+      }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
       console.error("[GenerateProductsController] Error:", errorMessage);
-      res.status(500).json({ error: errorMessage });
+      return {
+        statusCode: 500, message: errorMessage, status: 'error'
+      }
     }
   }
 }

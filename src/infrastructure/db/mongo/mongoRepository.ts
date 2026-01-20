@@ -4,7 +4,6 @@ import { ProductModel } from "./models/product.schema.js";
 
 export class MongoProductRepository implements ProductRepository {
   async getAll(): Promise<Product[]> {
-    console.log(ProductModel.find());
     return ProductModel.find();
   }
 

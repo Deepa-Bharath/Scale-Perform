@@ -4,7 +4,7 @@ import { type Product } from "../../domain/entities/Product.js";
 import { type ProductRepository } from "../../domain/repositories/ProductRepository.js";
 
 export class GenerateProductsUseCase {
-  private readonly PRODUCT_COUNT = 50000;
+  private readonly PRODUCT_COUNT = 100000;
   private readonly OUTPUT_FILE = "products_1000.json";
 
   constructor(private repository: ProductRepository) {}
