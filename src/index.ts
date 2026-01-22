@@ -7,6 +7,8 @@ import { router } from "./interfaces/http/routes.js";
 // Middleware setup
 import { config } from "dotenv";
 import { connectMongoDB } from "./infrastructure/db/mongo/connection.js";
+import { httpMetrics } from "./middleware/HttpMetrics.js";
+import { register } from "prom-client";
 
 // Load environment variables
 config();
@@ -15,7 +17,7 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 app.use(helmet());
-
+app.use(httpMetrics);
 // app.use(
 //   rateLimit({
 //     windowMs: 15 * 60 * 1000, // 15 minutes
@@ -29,6 +31,11 @@ app.get("/health", (req: any, res: any) => {
     message: "Server is running",
     time: new Date().toISOString(),
   });
+});
+
+app.get("/metrics", async (_req, res) => {
+  res.set("Content-Type", register.contentType);
+  res.end(await register.metrics());
 });
 app.use("/api", router);
 // Start server (connect to DB first)

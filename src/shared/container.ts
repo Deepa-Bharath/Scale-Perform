@@ -9,6 +9,7 @@ import { GenerateProductsUseCase } from "../application/usecases/GenerateProduct
 import { GetProductsController } from "../interfaces/http/controllers/GetProductsController.js";
 import { GenerateProductsController } from "../interfaces/http/controllers/GenerateProductsController.js";
 
+import { UsecaseMetrics } from "../shared/UsecaseMetrics.js";
 
 function createProductRepository(): ProductRepository {
   switch (process.env.DB_TYPE) {
@@ -25,7 +26,14 @@ function createProductRepository(): ProductRepository {
 
 const productRepository = createProductRepository();
 
-const getProductsUseCase = new GetProductsUseCase(productRepository);
+const rawGetProductsUseCase =
+  new GetProductsUseCase(productRepository);
+
+const getProductsUseCase =
+  new UsecaseMetrics(
+    rawGetProductsUseCase,
+    "GetProductsUseCase"
+  );
 export const getProductsController =
   new GetProductsController(getProductsUseCase);
 
