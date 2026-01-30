@@ -74,7 +74,6 @@ Pagination significantly reduced database and overall request latency,
 but the database remained the dominant contributor to response time.
 The sharp reduction is primarily due to limiting result set size, which reduces database scan time, memory usage, and response serialization overhead.
 
----
 
 ### Load Test Configuration (With Pagination)
 
@@ -86,9 +85,9 @@ The sharp reduction is primarily due to limiting result set size, which reduces 
 - Pagination enabled (`limit = 20`)
 
 
-#### Load Test Results (With Pagination)
+### Load Test Results (With Pagination)
 
-##### Throughput
+#### Throughput
 
 - Total requests completed: **988**
 - Client-side throughput (k6): ~**30 requests/second**
@@ -97,7 +96,7 @@ The sharp reduction is primarily due to limiting result set size, which reduces 
 Throughput plateaued as latency increased, indicating the system reached
 its saturation point under concurrent load.
 
-##### P95 Latency Under Load
+#### P95 Latency Under Load
 
 - **HTTP P95 latency** peaked at ≈ **2.4 seconds**
 - **Database (MongoDB) P95 latency** peaked at ≈ **2.3 seconds**
@@ -106,7 +105,7 @@ its saturation point under concurrent load.
 HTTP latency closely tracked database latency, confirming that the
 system is **database-bound under concurrent load**.
 
-##### CPU Utilization Observation
+#### CPU Utilization Observation
 
 - Node.js CPU utilization remained relatively stable during the load test
 - No CPU saturation was observed
@@ -115,7 +114,7 @@ system is **database-bound under concurrent load**.
 This indicates the system is **IO-bound (database-bound)** rather than CPU-bound.
 
 
-##### Why Only 988 Requests Were Completed
+#### Why Only 988 Requests Were Completed
 
 Each k6 virtual user performs a request, waits for the response,
 and then sleeps for 1 second before the next iteration.
@@ -128,7 +127,7 @@ This behavior indicates **latency-driven throughput saturation**, not
 request failures or instability.
 
 
-##### Performance Summary
+#### Performance Summary
 
 | Scenario                     | HTTP Latency Type | HTTP Latency | DB Latency | Throughput (RPS) | Bottleneck |
 |-----------------------------|-------------------|--------------|------------|------------------|------------|
