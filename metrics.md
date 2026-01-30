@@ -87,7 +87,7 @@ The sharp reduction is primarily due to limiting result set size, which reduces 
 
 ---
 
-## Load Test Results (With Pagination)
+### Load Test Results (With Pagination)
 
 ### Throughput
 
@@ -117,7 +117,7 @@ This indicates the system is **IO-bound (database-bound)** rather than CPU-bound
 
 ---
 
-## Why Only 988 Requests Were Completed
+### Why Only 988 Requests Were Completed
 
 Each k6 virtual user performs a request, waits for the response,
 and then sleeps for 1 second before the next iteration.
@@ -131,7 +131,7 @@ request failures or instability.
 
 ---
 
-## Performance Summary
+### Performance Summary
 
 | Scenario                     | HTTP Latency Type | HTTP Latency | DB Latency | Throughput (RPS) | Bottleneck |
 |-----------------------------|-------------------|--------------|------------|------------------|------------|
@@ -142,7 +142,7 @@ request failures or instability.
 
 ---
 
-## Key Takeaways
+### Key Takeaways
 
 - P95 latency provides a more accurate view of user experience than averages
 - Pagination significantly improves baseline and load-time latency
@@ -152,7 +152,7 @@ request failures or instability.
 
 ---
 
-## Next Steps
+### Next Steps
 
 - Add MongoDB indexes on frequently queried fields
 - Re-run load tests and compare P95 latency and throughput
