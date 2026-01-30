@@ -24,7 +24,11 @@ app.use(httpMetrics);
 //     max: 100, // limit each IP to 100 requests per windowMs
 //   })
 // );
-app.use(morgan("combined"));
+app.use(
+  morgan('combined', {
+    skip: (req) => req.path === '/metrics'
+  })
+)
 app.get("/health", (req: any, res: any) => {
   res.json({
     status: "ok",

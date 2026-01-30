@@ -1,5 +1,5 @@
 # Stage 1: Base (install deps only once)
-FROM node:22-alpine AS base
+FROM node:24-alpine AS base
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
@@ -16,7 +16,7 @@ COPY . .
 CMD ["npm", "run", "dev"]
 
 # Stage 4: Production (use prebuilt dist)
-FROM node:22-alpine AS production
+FROM node:24-alpine AS production
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci --only=production

@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "Production-ready TypeScript + Docker setup with hot reload for Node.js applications.",
   "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
