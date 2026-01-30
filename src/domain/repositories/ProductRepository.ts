@@ -2,6 +2,6 @@
 import { type Product } from "../../domain/entities/Product.js";
 
 export interface ProductRepository {
-    getAll(): Promise<Product[]>;
+    getAll(page: number): Promise<Product[]>;
     save(products: Product[]): Promise<void>;
 }

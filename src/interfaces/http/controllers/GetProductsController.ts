@@ -6,7 +6,7 @@ export class GetProductsController {
 
   async handle(req: any, res: any): Promise<Response> {
     try {
-    const products = await this.useCase.execute();
+    const products = await this.useCase.execute(req.query.page || 1);
     console.log(`[GetProductsController] Retrieved ${products.length} products.`);
       return { statusCode: 200, message: "Products retrieved successfully.", status: 'success', data: products };
     } catch (error) {

@@ -23,6 +23,23 @@ services:
       - mongo-data:/data/db
     environment:
       MONGO_INITDB_DATABASE: scale_perform
+  prometheus:
+    image: prom/prometheus
+    container_name: scale_perform_prometheus
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+    ports:
+      - "9090:9090"
+
+  grafana:
+    image: grafana/grafana
+    container_name: scale_perform_grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
   prod:
     build:
       context: .
