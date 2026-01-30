@@ -1,4 +1,4 @@
-## Measurement Methodology
+# Measurement Methodology
 
 All metrics are collected using Prometheus histograms and visualized in Grafana.
 
@@ -76,7 +76,7 @@ The sharp reduction is primarily due to limiting result set size, which reduces 
 
 ---
 
-## Load Test Configuration (With Pagination)
+### Load Test Configuration (With Pagination)
 
 - Tool: **k6**
 - Virtual users (VUs): ramped up to **50**
@@ -85,11 +85,10 @@ The sharp reduction is primarily due to limiting result set size, which reduces 
 - Dataset size: ~100,000 products
 - Pagination enabled (`limit = 20`)
 
----
 
-### Load Test Results (With Pagination)
+#### Load Test Results (With Pagination)
 
-### Throughput
+##### Throughput
 
 - Total requests completed: **988**
 - Client-side throughput (k6): ~**30 requests/second**
@@ -98,7 +97,7 @@ The sharp reduction is primarily due to limiting result set size, which reduces 
 Throughput plateaued as latency increased, indicating the system reached
 its saturation point under concurrent load.
 
-### P95 Latency Under Load
+##### P95 Latency Under Load
 
 - **HTTP P95 latency** peaked at ≈ **2.4 seconds**
 - **Database (MongoDB) P95 latency** peaked at ≈ **2.3 seconds**
@@ -107,7 +106,7 @@ its saturation point under concurrent load.
 HTTP latency closely tracked database latency, confirming that the
 system is **database-bound under concurrent load**.
 
-### CPU Utilization Observation
+##### CPU Utilization Observation
 
 - Node.js CPU utilization remained relatively stable during the load test
 - No CPU saturation was observed
@@ -115,9 +114,8 @@ system is **database-bound under concurrent load**.
 
 This indicates the system is **IO-bound (database-bound)** rather than CPU-bound.
 
----
 
-### Why Only 988 Requests Were Completed
+##### Why Only 988 Requests Were Completed
 
 Each k6 virtual user performs a request, waits for the response,
 and then sleeps for 1 second before the next iteration.
@@ -129,9 +127,8 @@ naturally limiting the total number of requests completed within the
 This behavior indicates **latency-driven throughput saturation**, not
 request failures or instability.
 
----
 
-### Performance Summary
+##### Performance Summary
 
 | Scenario                     | HTTP Latency Type | HTTP Latency | DB Latency | Throughput (RPS) | Bottleneck |
 |-----------------------------|-------------------|--------------|------------|------------------|------------|
@@ -139,8 +136,6 @@ request failures or instability.
 | Pagination, low load        | Observed (single) | ~0.09 s      | ~0.07 s    | N/A              | Database   |
 | Pagination, 50 VUs load     | P95               | ~2.4 s       | ~2.3 s     | ~15–30           | Database   |
 
-
----
 
 ### Key Takeaways
 
@@ -150,7 +145,6 @@ request failures or instability.
 - CPU utilization remaining stable confirms an IO-bound system
 - Further performance gains require database-level optimizations
 
----
 
 ### Next Steps
 
@@ -158,3 +152,5 @@ request failures or instability.
 - Re-run load tests and compare P95 latency and throughput
 - Evaluate cursor-based pagination
 - Explore caching strategies to further reduce database load
+
+---
