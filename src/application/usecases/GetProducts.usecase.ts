@@ -4,7 +4,7 @@ import { type Product } from "../../domain/entities/Product.js";
 export class GetProductsUseCase {
   constructor(private repository: ProductRepository) {}
 
-  async execute(lastSeenId: string): Promise<ProductResponse>{
+  async execute(lastSeenId?: string): Promise<ProductResponse>{
     const products:Product[] | null = await this.repository.getAll(lastSeenId);
     if (!products || products.length === 0) {
         return {
