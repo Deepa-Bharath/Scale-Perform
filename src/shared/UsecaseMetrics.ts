@@ -14,7 +14,7 @@ const useCaseExecutionTime = new Histogram({
 export class UsecaseMetrics<T extends {execute: Function}> {
     constructor(private usecase: T, private usecaseName: string) {}
 
-    async execute(...args: unknown[]) {
+    async execute(...args: unknown[]): Promise<unknown> {
     const endTimer = useCaseExecutionTime.startTimer({
       usecase: this.usecaseName,
     });

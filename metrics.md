@@ -147,9 +147,12 @@ request failures or instability.
 
 ### Next Steps
 
-- Add MongoDB indexes on frequently queried fields
+- Implement cursor-based pagination
 - Re-run load tests and compare P95 latency and throughput
 - Evaluate cursor-based pagination
 - Explore caching strategies to further reduce database load
 
 ---
+
+## Introduced Cursor-based Pagination
+
