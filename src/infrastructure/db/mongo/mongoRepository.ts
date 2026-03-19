@@ -1,4 +1,4 @@
-import { type Product } from "../../../domain/entities/Product.js";
+import { type Product,type NewProduct } from "../../../domain/entities/Product.js";
 import { type ProductRepository } from "../../../domain/repositories/ProductRepository.js";
 import { ProductModel } from "./models/product.schema.js";
 import { dbQueryDuration } from "../../../shared/dbMetrics.js";
@@ -11,14 +11,14 @@ export class MongoProductRepository implements ProductRepository {
   });    
   try{
     const filter = lastSeenId ? { _id: { $gt: lastSeenId } } : {};
-    return await ProductModel.find(filter).sort({ _id: 1 }).limit(20);
+    return await ProductModel.find(filter).sort({ _id: 1 }).limit(21);
   } finally {
     end();
   }
     
   }
 
-  async save(products: Product[]): Promise<void> {
+  async save(products: NewProduct[]): Promise<void> {
     await ProductModel.insertMany(products);
   }
 }
