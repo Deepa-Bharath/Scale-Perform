@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { type Product } from "../../domain/entities/Product.js";
+import { type NewProduct } from "../../domain/entities/Product.js";
 import { type ProductRepository } from "../../domain/repositories/ProductRepository.js";
 
 export class GenerateProductsUseCase {
@@ -23,8 +23,8 @@ export class GenerateProductsUseCase {
     }
   }
 
-  private  generateProductData(): Product[] {
-    const products: Product[] = [];
+  private  generateProductData(): NewProduct[]  {
+    const products: NewProduct[] = [];
 
     for (let i = 1; i <= this.PRODUCT_COUNT; i++) {
       products.push({
@@ -48,7 +48,7 @@ export class GenerateProductsUseCase {
     return "kits";
   }
 
-  private  saveProductsToFile(products: Product[]): void {
+  private  saveProductsToFile(products: NewProduct[]): void {
     try {
       const filePath = path.join(process.cwd(), this.OUTPUT_FILE);
       fs.writeFileSync(filePath, JSON.stringify(products, null, 2));
