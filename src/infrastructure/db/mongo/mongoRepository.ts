@@ -1,4 +1,4 @@
-import { type Product } from "../../../domain/entities/Product.js";
+import { type Product,type NewProduct } from "../../../domain/entities/Product.js";
 import { type ProductRepository } from "../../../domain/repositories/ProductRepository.js";
 import { ProductModel } from "./models/product.schema.js";
 import { dbQueryDuration } from "../../../shared/dbMetrics.js";
@@ -18,7 +18,7 @@ export class MongoProductRepository implements ProductRepository {
     
   }
 
-  async save(products: Product[]): Promise<void> {
+  async save(products: NewProduct[]): Promise<void> {
     await ProductModel.insertMany(products);
   }
 }

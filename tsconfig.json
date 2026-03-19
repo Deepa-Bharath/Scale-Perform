@@ -8,10 +8,10 @@
     // Environment Settings
     // See also https://aka.ms/tsconfig/module
     "module": "NodeNext",
-    "target": "ES2022",
+    "target": "ES2024",
     "moduleResolution": "NodeNext",
     "types": ["node","jest"],
-    "lib": ["ES2022"],
+    "lib": ["ES2024"],
     "esModuleInterop": false,
     "allowSyntheticDefaultImports": true,
 
@@ -34,7 +34,6 @@
 
     // Recommended Options
     "strict": true,
-    "jsx": "react-jsx",
     "verbatimModuleSyntax": true,
     "isolatedModules": true,
     "noUncheckedSideEffectImports": true,

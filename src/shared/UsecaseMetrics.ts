@@ -10,11 +10,13 @@ const useCaseExecutionTime = new Histogram({
   labelNames: ["usecase"],
   buckets: [0.01, 0.05, 0.1, 0.3, 0.5, 1, 2],
 });
+type UseCaseHandler<TArgs extends unknown[], TResult> = {
+  execute(...args: TArgs): Promise<TResult>;
+};
+export class UsecaseMetrics<TArgs extends unknown [], TResult> implements UseCaseHandler<TArgs, TResult> {
+    constructor(private usecase: UseCaseHandler<TArgs, TResult>, private usecaseName: string) {}
 
-export class UsecaseMetrics<T extends {execute: Function}> {
-    constructor(private usecase: T, private usecaseName: string) {}
-
-    async execute(...args: unknown[]): Promise<unknown> {
+    async execute(...args: TArgs): Promise<TResult> {
     const endTimer = useCaseExecutionTime.startTimer({
       usecase: this.usecaseName,
     });

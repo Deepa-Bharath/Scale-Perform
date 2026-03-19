@@ -1,66 +1,46 @@
-# Scale-Perform: High-Performance API 🚀
+# Scale-Perform
 
-A production-ready TypeScript + Docker application demonstrating API scalability and performance optimization techniques. This project creates a dummy GET API that efficiently handles multiple resources while maintaining optimal performance under load.
-
-## Project Overview
-
-Scale-Perform is designed to showcase best practices for building scalable Node.js APIs with Docker containerization. It includes a dummy GET API endpoint that retrieves and serves multiple resources, with performance monitoring and optimization strategies implemented throughout.
+A TypeScript API focused on scalability, performance testing, and observability. Local development now runs directly on your machine and connects to MongoDB through the `MONGO_URI` value in your environment.
 
 ## Architecture
+
 Client (HTTP)
-   ↓
-Interfaces (Controllers, Routes)
-   ↓
-Application (Use Cases)
-   ↓
-Domain (Entities, Repository Interfaces)
-   ↑
-Infrastructure (MongoDB, ORM, DB Connection)
+-> Interfaces (controllers, routes)
+-> Application (use cases)
+-> Domain (entities, repository interfaces)
+-> Infrastructure (MongoDB, ORM, DB connection)
 
-### Why this Architecture?
-
-This project is designed as a read-heavy API with the following long-term goals:
-
-High read performance
-
-Clear separation of concerns
-
-Ability to switch databases (Mongo today, others later)
-
-Easy observability (metrics, latency, DB timing)
-
-Docker-first, production-like setup
-
-To achieve these goals, we chose Hexagonal Architecture, also known as Ports & Adapters.
+This keeps transport, business logic, and persistence separated so the app is easier to evolve and test.
 
 ## Features
-- ⚡ Hot reload in development
-- 🐳 Multi-stage Docker builds
-- 📦 TypeScript with incremental compilation
-- 🏗️ Clean architecture structure
-- 🔧 Configured for ES modules
 
-## Quick Start
+- Hot reload for local development
+- TypeScript build output in `dist/`
+- MongoDB-backed repository implementation
+- Prometheus metrics endpoint at `/metrics`
+- Clean architecture structure
 
-### Existing Project
-  * npm init -y 
-  * npm install - node modules intallation 
-  * Typescript Setup - npx tsc --init
-  * Docker setup
+## Local setup
 
-### Use as Template
-1. Click the "Use this template" button
-2. Create your new repository
-3. Clone and start developing!
+### Prerequisites
 
-### Setup
+- Node.js 24+
+- A local or remote MongoDB instance
+
+### Run the app
+
+Install dependencies, create a `.env` file from `.env.example`, update the MongoDB connection string, then start the server:
+
 ```bash
-# Clone your new repo
-git clone https://github.com/yourusername/your-new-app.git
-cd your-new-app
-
-# Install dependencies
 npm install
+npm run dev
+```
 
-# Start development (terminals)
-docker compose up dev  # Terminal 1: Docker container
+The API uses `http://localhost:5000` by default.
+
+## Scripts
+
+- `npm run dev` runs TypeScript watch mode and the local server together
+- `npm run build` compiles the project
+- `npm run start` starts the compiled app from `dist/`
+- `npm run clean` removes the `dist/` folder
