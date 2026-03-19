@@ -1,17 +1,14 @@
+import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import morgan from "morgan";
-import { config } from "dotenv";
 import { router } from "./interfaces/http/routes.js";
 // Middleware setup
 import { connectMongoDB } from "./infrastructure/db/mongo/connection.js";
 import { httpMetrics } from "./middleware/HttpMetrics.js";
 import { register } from "prom-client";
-
-// Load environment variables
-config();
 
 const app = express();
 app.use(express.json());
