@@ -12,8 +12,7 @@ import { GenerateProductsController } from "../interfaces/http/controllers/Gener
 import { UsecaseMetrics } from "../shared/UsecaseMetrics.js";
 
 function createProductRepository(): ProductRepository {
-  const dbType = (process.env.DB_TYPE ?? "mongo").trim().toLowerCase();
-
+  const dbType:string | undefined = process.env.DB_TYPE; 
   switch (dbType) {
     case "mongo":
       return new MongoProductRepository();

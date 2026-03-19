@@ -1,10 +1,10 @@
 import { GenerateProductsUseCase } from "../../../application/usecases/GenerateProducts.usecase.js";
-import { type Response } from "../../../shared/types.js";
+import { type Result } from "../../../shared/types.js";
 
 export class GenerateProductsController {
   constructor(private useCase: GenerateProductsUseCase) {}
 
-  async handle(req: any, res: any): Promise<Response> {
+  async handle(req: any, res: any): Promise<Result> {
     try {
       await this.useCase.execute();
       return {
