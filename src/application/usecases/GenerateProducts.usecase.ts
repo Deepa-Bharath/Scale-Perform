@@ -34,8 +34,8 @@ export class GenerateProductsUseCase {
         category: this.getCategoryByIndex(i),
         price: 100 + (i % 900),
         isActive: true,
-        createdAt: new Date("2024-01-01").toISOString(),
-        updatedAt: new Date("2024-01-01").toISOString(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
       });
     }
 

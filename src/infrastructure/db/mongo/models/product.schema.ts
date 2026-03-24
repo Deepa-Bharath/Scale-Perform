@@ -7,8 +7,8 @@ const productSchema = new mongoose.Schema({
   price: { type: Number, required: true },
   category: { type: String, required: true },
   isActive: { type: Boolean, required: true },
-  createdAt: { type: String, required: true },
-  updatedAt: { type: String, required: true }
+  createdAt: { type: Date, required: true },
+  updatedAt: { type: Date, required: true }
 });
 const ProductModel = mongoose.model('Product', productSchema, "products");
 
