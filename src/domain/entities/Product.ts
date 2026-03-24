@@ -13,3 +13,10 @@ export interface Product {
 }
 
 export type NewProduct = Omit<Product, "_id">;
+
+export interface ProductFilters {
+  category?: string;
+  isActive?: boolean;
+}
+
+export type ProductPriceSort = "asc" | "desc";
