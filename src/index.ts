@@ -9,18 +9,19 @@ import { router } from "./interfaces/http/routes.js";
 import { connectMongoDB } from "./infrastructure/db/mongo/connection.js";
 import { httpMetrics } from "./middleware/HttpMetrics.js";
 import { register } from "prom-client";
+import { handleError } from "./middleware/error.middleware.js";
 
 const app = express();
 app.use(express.json());
 app.use(cors());
 app.use(helmet());
 app.use(httpMetrics);
-// app.use(
-//   rateLimit({
-//     windowMs: 15 * 60 * 1000, // 15 minutes
-//     max: 100, // limit each IP to 100 requests per windowMs
-//   })
-// );
+app.use(
+  rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // limit each IP to 100 requests per windowMs
+  })
+);
 app.use(
   morgan('combined', {
     skip: (req) => req.path === '/metrics'
@@ -39,6 +40,7 @@ app.get("/metrics", async (_req, res) => {
   res.end(await register.metrics());
 });
 app.use("/api", router);
+app.use(handleError)
 // Start server (connect to DB first)
 const PORT = Number(process.env.PORT) || 5000;
 const mongoURI = process.env.MONGO_URI || "";

@@ -11,7 +11,7 @@ export class MongoProductRepository implements ProductRepository {
   });    
   try{
     const filter = lastSeenId ? { _id: { $gt: lastSeenId } } : {};
-    return await ProductModel.find(filter).sort({ _id: 1 }).limit(21);
+    return await ProductModel.find(filter).sort({ _id: 1 }).limit(21).lean();
   } finally {
     end();
   }

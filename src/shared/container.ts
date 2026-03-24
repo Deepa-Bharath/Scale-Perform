@@ -10,6 +10,7 @@ import { GetProductsController } from "../interfaces/http/controllers/GetProduct
 import { GenerateProductsController } from "../interfaces/http/controllers/GenerateProductsController.js";
 
 import { UsecaseMetrics } from "../shared/UsecaseMetrics.js";
+import { AppError } from "./AppError.js";
 
 function createProductRepository(): ProductRepository {
   const dbType:string | undefined = process.env.DB_TYPE; 
@@ -21,7 +22,10 @@ function createProductRepository(): ProductRepository {
       //return new PostgresProductRepository();
 
     default:
-      throw new Error(`Unsupported DB type "${dbType}". Set DB_TYPE=mongo|postgres`);
+      throw new AppError(
+        `Unsupported DB type "${dbType}". Set DB_TYPE=mongo|postgres`,
+        500
+      );
   }
 }
 

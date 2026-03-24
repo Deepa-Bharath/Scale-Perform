@@ -8,8 +8,8 @@ export interface Product {
   category: string;
   price: number;
   isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export type NewProduct = Omit<Product, "_id">;
