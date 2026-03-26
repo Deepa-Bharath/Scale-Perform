@@ -8,8 +8,9 @@ import {
 
 export interface ProductRepository {
     getAll(
+      filters: ProductFilters,
       lastSeenId?: string,
-      filters?: ProductFilters,
+      lastPrice?: number,
       priceSort?: ProductPriceSort
     ): Promise<Product[] | []>;
     save(products: NewProduct[]): Promise<void>;
