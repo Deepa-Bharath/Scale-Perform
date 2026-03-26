@@ -8,8 +8,9 @@ import {
 
 type GetProductsHandler = {
   execute(
+    filters: ProductFilters,
     lastSeenId?: string,
-    filters?: ProductFilters,
+    lastPrice?: number,
     priceSort?: ProductPriceSort
   ): Promise<ProductResponse>;
 };
@@ -17,11 +18,9 @@ export class GetProductsController {
   constructor(private useCase: GetProductsHandler) {}
 
   async handle(req: any): Promise<Result> {
-    const filters: ProductFilters = {};
-
-    if (typeof req.query.category === "string") {
-      filters.category = req.query.category.trim();
-    }
+    const category =
+      typeof req.query.category === "string" ? req.query.category.trim() : "";
+    const filters: ProductFilters = { category };
 
     if (typeof req.query.isActive === "string") {
       if (req.query.isActive === "true") {
@@ -31,17 +30,21 @@ export class GetProductsController {
       }
     }
 
+    const lastPrice =
+      typeof req.query.lastPrice === "string" && req.query.lastPrice.trim() !== ""
+        ? Number(req.query.lastPrice)
+        : undefined;
+
     const priceSortQuery = req.query.price;
     const priceSort: ProductPriceSort | undefined =
       priceSortQuery === "asc" || priceSortQuery === "desc"
         ? priceSortQuery
-        : typeof priceSortQuery === "string"
-          ? (priceSortQuery as ProductPriceSort)
-          : undefined;
+        : undefined;
 
     const products: ProductResponse = await this.useCase.execute(
-      req.query.lastSeenId,
       filters,
+      req.query.lastSeenId,
+      lastPrice,
       priceSort
     );
     return {

@@ -11,6 +11,7 @@ export interface ProductResponse {
   products: Product[];
   hasMore: boolean;
   lastSeenId?: Types.ObjectId;
+  lastPrice?: number;
 }
 
 export type RepositoryType = 'mongoDB' |'postgreSQL';

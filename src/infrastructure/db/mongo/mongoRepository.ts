@@ -10,8 +10,9 @@ import { dbQueryDuration } from "../../../shared/dbMetrics.js";
 
 export class MongoProductRepository implements ProductRepository {
   async getAll(
+    filters: ProductFilters,
     lastSeenId?: string,
-    filters: ProductFilters = {},
+    lastPrice?: number,
     priceSort?: ProductPriceSort
   ): Promise<Product[] | []> {
   const end = dbQueryDuration.startTimer({
@@ -21,10 +22,6 @@ export class MongoProductRepository implements ProductRepository {
   try{
     const filter: Record<string, unknown> = {};
 
-    if (lastSeenId) {
-      filter._id = { $gt: lastSeenId };
-    }
-
     if (filters.category !== undefined) {
       filter.category = filters.category;
     }
@@ -33,12 +30,24 @@ export class MongoProductRepository implements ProductRepository {
       filter.isActive = filters.isActive;
     }
 
-   const sort: Record<string, 1 | -1> = priceSort
-  ? { price: priceSort === "asc" ? 1 : -1, _id: 1 }
-  : { _id: 1 };
+    if (priceSort !== undefined) {
+      if (lastSeenId && lastPrice !== undefined) {
+        const priceComparison = priceSort === "asc" ? "$gt" : "$lt";
+        filter.$or = [
+          { price: { [priceComparison]: lastPrice } },
+          { price: lastPrice, _id: { $gt: lastSeenId } },
+        ];
+      }
 
+      const sort = { price: priceSort === "asc" ? 1 : -1, _id: 1 } as const;
+      return await ProductModel.find(filter).sort(sort).limit(21).lean();
+    }
 
-    return await ProductModel.find(filter).sort(sort).limit(21).lean();
+    if (lastSeenId) {
+      filter._id = { $gt: lastSeenId };
+    }
+
+    return await ProductModel.find(filter).sort({ _id: 1 }).limit(21).lean();
   } finally {
     end();
   }

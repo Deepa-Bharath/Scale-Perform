@@ -15,7 +15,7 @@ export interface Product {
 export type NewProduct = Omit<Product, "_id">;
 
 export interface ProductFilters {
-  category?: string;
+  category: string;
   isActive?: boolean;
 }
 
