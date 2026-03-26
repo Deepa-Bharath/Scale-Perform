@@ -156,3 +156,51 @@ request failures or instability.
 
 ## Introduced Cursor-based Pagination
 
+Dataset size: ~100,000 products  
+Query type: Cursor-based pagination with category filter and optional price sort
+
+### Cursor Pagination Update
+
+Cursor-based pagination was introduced so pagination order matches the query sort order.  
+For price-sorted requests, the API now uses a composite cursor made of:
+
+- `lastSeenId`
+- `lastPrice`
+
+This prevents duplicate and skipped records across pages when sorting by price.
+
+### Added Compound Indexes
+
+To support the new query shapes efficiently, compound MongoDB indexes were added for:
+
+- `category + price asc + _id`
+- `category + price desc + _id`
+
+Additional partial indexes were added for active products:
+
+- `category + price asc + _id` with `partialFilterExpression: { isActive: true }`
+- `category + price desc + _id` with `partialFilterExpression: { isActive: true }`
+
+### Observed Result After Indexing
+
+After adding the indexes, observed API latency reduced to approximately **2 ms**.
+
+### Interpretation
+
+- Cursor-based pagination improved correctness for sorted pagination
+- Matching indexes reduced MongoDB scan cost significantly
+- The API now spends far less time waiting on the database for paginated product queries
+
+### Updated Summary
+
+| Scenario                              | HTTP Latency Type | HTTP Latency | Notes |
+|---------------------------------------|-------------------|--------------|-------|
+| No pagination, low load               | Observed (single) | ~7.6 s       | Full scan |
+| Pagination with `limit`, low load     | Observed (single) | ~0.09 s      | Smaller payload, still scan-heavy |
+| Pagination, 50 VUs load               | P95               | ~2.4 s       | Database-bound under load |
+| Cursor pagination + indexes           | Observed (single) | ~2 ms        | Query aligned with compound index |
+
+### Conclusion
+
+The combination of correct cursor-based pagination and matching MongoDB indexes produced the biggest improvement so far for the product listing API. The latency reduction to about **2 ms** shows that the main bottleneck was query execution strategy and index alignment rather than application-layer logic.
+
