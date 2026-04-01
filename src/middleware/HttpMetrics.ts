@@ -14,6 +14,11 @@ export function httpMetrics(
   res: Response,
   next: NextFunction
 ) {
+  if (req.path === "/metrics") {
+    next();
+    return;
+  }
+
   const end = httpRequestDuration.startTimer({
     method: req.method,
   });
