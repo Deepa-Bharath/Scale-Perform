@@ -106,6 +106,35 @@ Make sure `MONGO_URI` is set before running migrations.
 - `GET /metrics` exposes Prometheus metrics
 - `GET /api/products` returns product data with filters and cursor pagination
 
+## Local monitoring and load testing
+
+This project currently uses the following local tools during development:
+
+- MongoDB
+- Grafana Alloy
+- Grafana Cloud
+- k6
+
+### Current metrics setup
+
+- The API exposes Prometheus-format metrics at `GET /metrics`
+- Grafana Alloy scrapes the local metrics endpoint and forwards data to Grafana Cloud
+- A local Prometheus server is not required for the current setup
+
+### Load testing
+
+The repository includes a k6 script at:
+
+```text
+loadtest/products.js
+```
+
+Run it with:
+
+```bash
+k6 run loadtest/products.js
+```
+
 ## Available scripts
 
 - `npm run dev` runs local development mode
