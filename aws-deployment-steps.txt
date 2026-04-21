@@ -1,0 +1,262 @@
+Scale-Perform AWS Deployment Notes
+Generated from the deployment planning and setup session.
+
+Purpose
+This document captures the AWS resources we created for deploying the Scale-Perform service, why each one is needed, what was confirmed during setup, and what is still left before the API can be accessed through AWS.
+
+Current target architecture
+Internet -> Application Load Balancer -> ECS service on EC2 -> Node.js app
+                                                      -> MongoDB
+                                                      -> Redis (private IP when used)
+
+Chosen AWS environment
+- Region: ap-south-1 (Mumbai)
+- VPC: vpc-0f219df35ad6b17c1
+- Subnet 1: subnet-09b3b11e1c1b9d879
+- Subnet 2: subnet-0f89883a3ed91fdd3
+- Redis private IP: 172.31.32.246
+
+Why VPC and subnets are needed
+- The VPC is the private AWS network where ECS, ALB, and backend services communicate.
+- The subnets are where the load balancer and ECS container hosts are placed.
+- Two subnets in different Availability Zones are preferred so the ALB can span multiple AZs.
+- Redis can be reached privately inside the VPC instead of being exposed publicly.
+
+Step 1: Pick region, VPC, and subnets
+What we did
+- Chose the Mumbai region to stay close to the existing Redis EC2 instance.
+- Identified the VPC and two subnets for ECS and ALB placement.
+
+Why needed
+- All later AWS resources must be created in the same region and VPC for networking to work correctly.
+
+Status
+- Confirmed.
+
+Step 2: Create an ECR repository
+What we did
+- Created a private ECR repository:
+  305068201505.dkr.ecr.ap-south-1.amazonaws.com/scale-perform-api
+
+Why needed
+- ECS tasks need a container image source.
+- ECR is the AWS-native registry used by ECS to pull the application image.
+
+Status
+- Confirmed created.
+
+Step 3: Plan SSM Parameter Store configuration
+Parameters discussed
+- /scale-perform/prod/PORT
+- /scale-perform/prod/DB_TYPE
+- /scale-perform/prod/MONGO_URI
+- /scale-perform/prod/REDIS_URL (optional until Redis is used by the app)
+
+Why needed
+- ECS tasks should not hardcode database credentials or runtime config.
+- Parameter Store SecureString is cheaper than Secrets Manager for this stage.
+
+Status
+- MONGO_URI: not yet created at the time of the session.
+- REDIS_URL: not yet created at the time of the session.
+- PORT and DB_TYPE were part of the plan, but final creation was not confirmed in the session.
+
+Step 4: Create IAM roles for ECS
+Roles discussed
+- ecsTaskExecutionRole
+- scale-perform-ecs-task-role
+- ecsInstanceRole
+
+Why each role is needed
+- ecsTaskExecutionRole:
+  Used by ECS to pull images from ECR and send container logs to CloudWatch.
+- scale-perform-ecs-task-role:
+  Used by the running application container to read SSM parameters and other AWS APIs if needed.
+- ecsInstanceRole:
+  Used by the EC2 host so it can join the ECS cluster and be managed by Systems Manager.
+
+Status confirmed in session
+- ecsTaskExecutionRole created: yes
+- scale-perform-ecs-task-role created: yes
+- ecsInstanceRole created: yes
+- AmazonSSMManagedInstanceCore on ecsInstanceRole was required and called out explicitly.
+
+Step 5: Create GitHub OIDC provider and deploy role path
+What we did
+- Created the IAM OIDC identity provider for GitHub Actions:
+  Provider URL: https://token.actions.githubusercontent.com
+  Audience: sts.amazonaws.com
+- Defined the trust policy shape for a GitHub deploy role restricted to:
+  repo:Deepa-Bharath/Scale-Perform:ref:refs/heads/main
+
+Why needed
+- GitHub Actions can assume an AWS role without storing long-lived AWS access keys.
+- This is the recommended AWS and GitHub pattern for CI/CD authentication.
+
+Status
+- OIDC identity provider confirmed created.
+- Deploy role trust and permission setup was discussed and prepared.
+- Final attachment status of the custom deploy policy should be rechecked before CI/CD is enabled.
+
+Step 6: Create the ECS cluster and EC2 capacity
+What we did
+- Created the ECS cluster:
+  scale-perform-cluster
+- Used ECS on EC2, not Fargate.
+- An EC2 instance was launched as the ECS container host.
+- A capacity provider backed by an Auto Scaling group was auto-created by the ECS flow.
+
+Why needed
+- The ECS cluster is the control plane where services and tasks will run.
+- The EC2 instance is the machine that will host the application containers.
+- The capacity provider connects ECS task scheduling to the EC2 Auto Scaling group.
+
+Important lesson from the session
+- Stopping the EC2 instance directly is not the right way to pause costs when it belongs to the Auto Scaling group.
+- The Auto Scaling group will recreate or bring back capacity if desired capacity is still above zero.
+
+Status
+- Confirmed created and running.
+
+Step 7: Security groups, target group, and ALB
+Security groups created
+- scale-perform-alb-sg
+- scale-perform-app-sg
+
+Why they are needed
+- scale-perform-alb-sg:
+  Allows inbound HTTP 80 from the internet to the ALB.
+- scale-perform-app-sg:
+  Allows inbound app traffic on port 5000 only from the ALB security group.
+
+Target group created
+- scale-perform-api-tg
+
+Why target group is needed
+- The ALB does not send traffic directly to the ECS service.
+- It forwards to a target group.
+- ECS later registers and deregisters task IPs in this target group.
+- Health checks such as /health are defined on the target group.
+
+ALB created
+- scale-perform-alb
+
+Why ALB is needed
+- Provides a public entry point for the application.
+- Distributes traffic across healthy ECS tasks.
+- Makes service scaling and health checks practical.
+
+Important networking note
+- The EC2 host can still have a public IP.
+- ALB to target communication still uses private IPs inside the VPC.
+- Redis should be reached over private IP only.
+
+Status
+- Target group confirmed created.
+- ALB confirmed created.
+
+Step 8: Create the ECS task definition
+Task definition created
+- Family: scale-perform-api
+
+Why needed
+- A task definition is the blueprint for the app container:
+  image, port mappings, roles, logs, env vars, and resource requests.
+
+Important lesson from the session
+- The EC2 host can exist before the task definition exists.
+- The host is only compute capacity.
+- The task definition tells ECS what container to run on that capacity.
+
+Resource sizing lesson
+- The EC2 host is a t3.micro.
+- Task CPU and memory values must fit on that host.
+- Large defaults like 1 vCPU and 3 GB are not practical on a 1 GiB host.
+
+Status
+- Task definition confirmed created.
+- Final revision values should be rechecked before service launch.
+
+Step 9: ECS service creation
+What was planned
+- Create an ECS service using:
+  - cluster: scale-perform-cluster
+  - task definition: scale-perform-api
+  - ALB: scale-perform-alb
+  - target group: scale-perform-api-tg
+  - app security group: scale-perform-app-sg
+  - desired tasks: 1
+
+Why needed
+- The ECS service is what actually keeps tasks running.
+- It connects the task definition to the ALB and target group.
+- It is also the unit that later gets autoscaled.
+
+Status
+- Not yet completed during the session.
+
+Cost and shutdown lessons
+Why the EC2 instance came back after being stopped
+- The ECS cluster is backed by an Auto Scaling group through the capacity provider.
+- If desired capacity is still above zero, Auto Scaling recreates or restarts capacity.
+
+Correct low-cost park mode for this setup
+- Set ECS service desired count to 0.
+- If service autoscaling is enabled, set min tasks to 0 or disable it.
+- Set the Auto Scaling group desired capacity to 0.
+- Set the Auto Scaling group min capacity to 0.
+- Delete the ALB if minimizing cost aggressively, because ALB is billed while it exists.
+- Stop standalone Redis or Mongo EC2 instances if they are not part of Auto Scaling.
+
+What can usually remain without major runtime cost
+- VPC, subnets, route tables
+- Security groups
+- IAM roles
+- ECS cluster metadata
+- ECS task definitions
+- SSM parameters
+- ECR repository shell
+
+Important cost notes
+- ECS on EC2 does not add an extra ECS charge by itself, but EC2, EBS, ALB, and public IPv4 can still cost money.
+- ALB is not free to keep around continuously.
+- Public IPv4 usage can also incur cost.
+- NAT gateways should be avoided for this learning setup unless truly needed, because they add hourly cost.
+
+What remains before the API is live
+AWS-side remaining work
+- Create or confirm /scale-perform/prod/MONGO_URI in SSM Parameter Store.
+- Confirm PORT and DB_TYPE parameters exist in SSM.
+- Review the task definition revision for:
+  - correct execution role
+  - correct task role
+  - correct container port 5000
+  - awslogs configuration
+  - SSM secret injection
+- Create the ECS service.
+- Confirm the ECS task registers in scale-perform-api-tg.
+- Confirm target health check /health passes.
+- Configure ECS service autoscaling after the service is stable.
+- Create AWS Budget alerts for learning mode cost control.
+
+App and artifact remaining work
+- Build a valid Docker image for the service.
+- Push the image to the ECR repository.
+- Confirm the app starts cleanly in the container.
+- Confirm MONGO_URI points to a reachable MongoDB instance.
+
+Suggested next order
+1. Create or confirm MONGO_URI in SSM.
+2. Build and push the Docker image to ECR.
+3. Create the ECS service.
+4. Verify /health through the ALB DNS name.
+5. Add autoscaling rules.
+6. Add CI/CD after the runtime path is proven.
+
+Learning-mode summary
+- Goal:
+  Experience a realistic architecture with ALB, ECS on EC2, health checks, and scaling.
+- Tradeoff:
+  Better learning realism than a single EC2 instance, but more moving parts and more billing risk.
+- Cost discipline:
+  Keep desired task count low, avoid unused ALBs or NAT gateways, and scale ASG and ECS service to zero when parked.

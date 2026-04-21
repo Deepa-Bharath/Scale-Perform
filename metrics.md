@@ -134,7 +134,7 @@ request failures or instability.
 | No pagination, low load     | Observed (single) | ~7.6 s       | ~6.5 s     | N/A              | Database   |
 | Pagination, low load        | Observed (single) | ~0.09 s      | ~0.07 s    | N/A              | Database   |
 | Pagination, 50 VUs load     | P95               | ~2.4 s       | ~2.3 s     | ~15–30           | Database   |
-
+Compound Index	(200 VUs)	    | P95               | ~47.5 ms     |	~9.7 ms    |  ~94             |
 
 ### Key Takeaways
 
@@ -198,9 +198,9 @@ After adding the indexes, observed API latency reduced to approximately **2 ms**
 | No pagination, low load               | Observed (single) | ~7.6 s       | Full scan |
 | Pagination with `limit`, low load     | Observed (single) | ~0.09 s      | Smaller payload, still scan-heavy |
 | Pagination, 50 VUs load               | P95               | ~2.4 s       | Database-bound under load |
-| Cursor pagination + indexes           | Observed (single) | ~2 ms        | Query aligned with compound index |
+| Cursor pagination + indexes           | P95 (200 VUs)     | ~47.5 ms     | Query aligned with compound index |
 
 ### Conclusion
 
-The combination of correct cursor-based pagination and matching MongoDB indexes produced the biggest improvement so far for the product listing API. The latency reduction to about **2 ms** shows that the main bottleneck was query execution strategy and index alignment rather than application-layer logic.
+Compound indexing successfully reduced database latency by 99% compared to the previous pagination iteration (from 2.3s to 9.7ms). However, this efficiency exposed a new bottleneck in the single-threaded nature of the Node.js server.
 

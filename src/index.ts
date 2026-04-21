@@ -16,17 +16,17 @@ app.use(express.json());
 app.use(cors());
 app.use(helmet());
 app.use(httpMetrics);
-app.use(
-  rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // limit each IP to 100 requests per windowMs
-  })
-);
-app.use(
-  morgan('combined', {
-    skip: (req) => req.path === '/metrics'
-  })
-)
+// app.use(
+//   rateLimit({
+//     windowMs: 15 * 60 * 1000, // 15 minutes
+//     max: 100, // limit each IP to 100 requests per windowMs
+//   })
+// );
+// app.use(
+//   morgan('combined', {
+//     skip: (req) => req.path === '/metrics'
+//   })
+// )
 app.get("/health", (req: any, res: any) => {
   res.json({
     status: "ok",
