@@ -1,0 +1,56 @@
+{
+  "family": "scale-perform-api",
+  "taskRoleArn": "arn:aws:iam::305068201505:role/scale-perform-ecs-task-role",
+  "executionRoleArn": "arn:aws:iam::305068201505:role/ecsTaskExecutionRole",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["EC2"],
+  "cpu": "256",
+  "memory": "512",
+  "runtimePlatform": {
+    "cpuArchitecture": "X86_64",
+    "operatingSystemFamily": "LINUX"
+  },
+  "containerDefinitions": [
+    {
+      "name": "scale-perform-api",
+      "image": "305068201505.dkr.ecr.ap-south-1.amazonaws.com/scale-perform-api:latest",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 5000,
+          "hostPort": 5000,
+          "protocol": "tcp"
+        }
+      ],
+      "environment": [
+        {
+          "name": "NODE_ENV",
+          "value": "production"
+        }
+      ],
+      "memoryReservation": 256,
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/scale-perform-api",
+          "awslogs-region": "ap-south-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      },
+      "secrets": [
+        {
+          "name": "PORT",
+          "valueFrom": "arn:aws:ssm:ap-south-1:305068201505:parameter/scale-perform/prod/PORT"
+        },
+        {
+          "name": "DB_TYPE",
+          "valueFrom": "arn:aws:ssm:ap-south-1:305068201505:parameter/scale-perform/prod/DB_TYPE"
+        },
+        {
+          "name": "MONGO_URI",
+          "valueFrom": "arn:aws:ssm:ap-south-1:305068201505:parameter/scale-perform/prod/MONGO_URI"
+        }
+      ]
+    }
+  ]
+}
