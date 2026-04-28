@@ -57,9 +57,9 @@ Why needed
 - Parameter Store SecureString is cheaper than Secrets Manager for this stage.
 
 Status
-- MONGO_URI: not yet created at the time of the session.
+- MONGO_URI: confirmed in SSM Parameter Store for the production ECS task.
 - REDIS_URL: not yet created at the time of the session.
-- PORT and DB_TYPE were part of the plan, but final creation was not confirmed in the session.
+- PORT and DB_TYPE: confirmed in SSM Parameter Store for the production ECS task.
 
 Step 4: Create IAM roles for ECS
 Roles discussed
@@ -95,8 +95,8 @@ Why needed
 
 Status
 - OIDC identity provider confirmed created.
-- Deploy role trust and permission setup was discussed and prepared.
-- Final attachment status of the custom deploy policy should be rechecked before CI/CD is enabled.
+- GitHub deploy role is configured for the deployment workflow.
+- GitHub Actions deployment path is present in .github/workflows/deploy.yml.
 
 Step 6: Create the ECS cluster and EC2 capacity
 What we did
@@ -175,11 +175,11 @@ Resource sizing lesson
 
 Status
 - Task definition confirmed created.
-- Final revision values should be rechecked before service launch.
+- Current service is running task definition revision scale-perform-api:5.
 
 Step 9: ECS service creation
-What was planned
-- Create an ECS service using:
+What we did
+- Created an ECS service using:
   - cluster: scale-perform-cluster
   - task definition: scale-perform-api
   - ALB: scale-perform-alb
@@ -193,7 +193,11 @@ Why needed
 - It is also the unit that later gets autoscaled.
 
 Status
-- Not yet completed during the session.
+- Confirmed completed.
+- Service scale-perform-api-service is active.
+- Desired tasks: 1.
+- Running tasks: 1.
+- Target group scale-perform-api-tg reports 1 healthy target.
 
 Cost and shutdown lessons
 Why the EC2 instance came back after being stopped
@@ -223,35 +227,26 @@ Important cost notes
 - Public IPv4 usage can also incur cost.
 - NAT gateways should be avoided for this learning setup unless truly needed, because they add hourly cost.
 
-What remains before the API is live
-AWS-side remaining work
-- Create or confirm /scale-perform/prod/MONGO_URI in SSM Parameter Store.
-- Confirm PORT and DB_TYPE parameters exist in SSM.
-- Review the task definition revision for:
-  - correct execution role
-  - correct task role
-  - correct container port 5000
-  - awslogs configuration
-  - SSM secret injection
-- Create the ECS service.
-- Confirm the ECS task registers in scale-perform-api-tg.
-- Confirm target health check /health passes.
-- Configure ECS service autoscaling after the service is stable.
+Current live status
+AWS-side completed setup
+- /scale-perform/prod/MONGO_URI exists in SSM Parameter Store.
+- /scale-perform/prod/PORT exists in SSM Parameter Store.
+- /scale-perform/prod/DB_TYPE exists in SSM Parameter Store.
+- Task definition uses the expected execution role, task role, container port 5000, awslogs configuration, and SSM secret injection.
+- ECS service scale-perform-api-service is created and active.
+- ECS task registers in scale-perform-api-tg.
+- Target group health check /health passes.
+- The target group reports 1 healthy target.
+
+App and artifact completed setup
+- Docker image is built and pushed to ECR through the deployment workflow.
+- ECS service runs the deployed image.
+- The app starts cleanly in the container.
+- MONGO_URI points to the MongoDB instance reachable from ECS.
+
+Optional follow-up work
+- Configure ECS service autoscaling if needed after more traffic testing.
 - Create AWS Budget alerts for learning mode cost control.
-
-App and artifact remaining work
-- Build a valid Docker image for the service.
-- Push the image to the ECR repository.
-- Confirm the app starts cleanly in the container.
-- Confirm MONGO_URI points to a reachable MongoDB instance.
-
-Suggested next order
-1. Create or confirm MONGO_URI in SSM.
-2. Build and push the Docker image to ECR.
-3. Create the ECS service.
-4. Verify /health through the ALB DNS name.
-5. Add autoscaling rules.
-6. Add CI/CD after the runtime path is proven.
 
 Learning-mode summary
 - Goal:
