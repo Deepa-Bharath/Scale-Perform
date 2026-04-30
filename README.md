@@ -55,6 +55,28 @@ MONGO_URI=mongodb://127.0.0.1:27017/scale_perform
 DB_TYPE=mongo
 ```
 
+Optional local Postgres values for wallet/auth development:
+
+```env
+POSTGRES_HOST=127.0.0.1
+POSTGRES_PORT=5432
+POSTGRES_DB=scale_perform
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=your_password
+```
+
+When registering the local server in pgAdmin, use the default `postgres`
+database as the maintenance database. The app database can then be created as
+`scale_perform`.
+
+```text
+Host: 127.0.0.1
+Port: 5432
+Maintenance database: postgres
+Username: postgres
+App database: scale_perform
+```
+
 ### Install dependencies
 
 ```bash

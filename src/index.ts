@@ -7,6 +7,7 @@ import morgan from "morgan";
 import { router } from "./interfaces/http/routes.js";
 // Middleware setup
 import { connectMongoDB } from "./infrastructure/db/mongo/connection.js";
+import './infrastructure/db/postgres/connection.js';
 import { httpMetrics } from "./middleware/HttpMetrics.js";
 import { register } from "prom-client";
 import { handleError } from "./middleware/error.middleware.js";
