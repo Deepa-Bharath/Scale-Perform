@@ -1,7 +1,6 @@
-import { type ProductRepository } from "../domain/repositories/ProductRepository.js";
 
 import { MongoProductRepository } from "../infrastructure/db/mongo/mongoRepository.js";
-//import { PostgresProductRepository } from "../infrastructure/db/postgres/postgresRepository";
+import { PostgresUserRepository } from "../infrastructure/db/postgres/PostgresUserRepository.js";
 
 import { GetProductsUseCase } from "../application/usecases/GetProducts.usecase.js";
 import { GenerateProductsUseCase } from "../application/usecases/GenerateProducts.usecase.js";
@@ -10,26 +9,13 @@ import { GetProductsController } from "../interfaces/http/controllers/GetProduct
 import { GenerateProductsController } from "../interfaces/http/controllers/GenerateProductsController.js";
 
 import { UsecaseMetrics } from "../shared/UsecaseMetrics.js";
-import { AppError } from "./AppError.js";
+import { RegisterUserUseCase } from "../application/usecases/RegisterUser.usecase.js";
+import { RegisterUserController } from "../interfaces/http/controllers/registerUserController.js";
 
-function createProductRepository(): ProductRepository {
-  const dbType:string | undefined = process.env.DB_TYPE; 
-  switch (dbType) {
-    case "mongo":
-      return new MongoProductRepository();
+import { LoginUserUseCase } from "../application/usecases/LoginUser.usecase.js";
+import { LoginUserController } from "../interfaces/http/controllers/loginUserController.js";
 
-    case "postgres":
-      //return new PostgresProductRepository();
-
-    default:
-      throw new AppError(
-        `Unsupported DB type "${dbType}". Set DB_TYPE=mongo|postgres`,
-        500
-      );
-  }
-}
-
-const productRepository = createProductRepository();
+const productRepository = new MongoProductRepository();
 
 const rawGetProductsUseCase =
   new GetProductsUseCase(productRepository);
@@ -46,3 +32,12 @@ export const getProductsController =
 const generateProductsUseCase = new GenerateProductsUseCase(productRepository);
 export const generateProductsController =
   new GenerateProductsController(generateProductsUseCase);
+
+const userRepository = new PostgresUserRepository();
+const registerUserUseCase = new RegisterUserUseCase(userRepository);
+export const registerUserController =
+  new RegisterUserController(registerUserUseCase);
+
+const loginUserUseCase = new LoginUserUseCase(userRepository);
+export const loginUserController =
+  new LoginUserController(loginUserUseCase);

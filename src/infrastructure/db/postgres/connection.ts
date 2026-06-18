@@ -1,4 +1,4 @@
- import { Kysely, PostgresDialect } from 'kysely'
+ import { Kysely, PostgresDialect, sql } from 'kysely'
  import { Pool } from 'pg'
  import { type Database } from './types.js';
 const connectPostgresDB = async (): Promise<Kysely<Database>> => {
@@ -12,7 +12,7 @@ const connectPostgresDB = async (): Promise<Kysely<Database>> => {
           }),
         })
       });
-      await db.selectFrom('users').executeTakeFirst();
+      await sql`select 1`.execute(db);
       return db;
     } catch (error) {
       console.error('Error connecting to PostgreSQL:', error);
