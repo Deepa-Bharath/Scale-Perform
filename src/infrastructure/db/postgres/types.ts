@@ -22,19 +22,20 @@ export interface UserTable {
 export interface WalletTable {
     id: Generated<UUID>
     user_id: UUID
-    balance: string
+    balance: bigint
     currency: string
     created_at: ColumnType<Date, Date, never>
     updated_at: ColumnType<Date, Date, Date>
 }
 
 export interface LedgerEntryTable {
+    seq: Generated<bigint>
     id: Generated<UUID>
     wallet_id: UUID
     reference_id: string
     type: 'CREDIT' | 'DEBIT'
-    amount: string
-    balance_after: string
+    amount: bigint
+    balance_after: bigint
     description: string | null
     created_at: ColumnType<Date, Date, never>
 }

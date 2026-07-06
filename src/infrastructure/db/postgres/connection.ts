@@ -1,6 +1,9 @@
  import { Kysely, PostgresDialect, sql } from 'kysely'
  import { Pool } from 'pg'
  import { type Database } from './types.js';
+ import pg from 'pg'
+pg.types.setTypeParser(20, (val) => BigInt(val))  // OID 20 = bigint/int8
+
 const connectPostgresDB = async (): Promise<Kysely<Database>> => {
     try {      
         const db = new Kysely<Database>({
