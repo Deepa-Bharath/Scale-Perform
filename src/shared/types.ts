@@ -1,5 +1,3 @@
-import { Types } from "mongoose";
-import { type Product } from "../domain/entities/Product.js";
 export interface Result {
   statusCode: number;
   message: string;
@@ -7,11 +5,4 @@ export interface Result {
   data?: object | object[] | null;
 }
 
-export interface ProductResponse {
-  products: Product[];
-  hasMore: boolean;
-  lastSeenId?: Types.ObjectId;
-  lastPrice?: number;
-}
-
-export type RepositoryType = 'mongoDB' |'postgreSQL';
+export type RepositoryType = 'mongoDB' | 'postgreSQL';

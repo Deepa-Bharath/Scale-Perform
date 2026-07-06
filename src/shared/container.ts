@@ -1,12 +1,7 @@
 
-import { MongoProductRepository } from "../infrastructure/db/mongo/mongoRepository.js";
 import { PostgresUserRepository } from "../infrastructure/db/postgres/PostgresUserRepository.js";
-
-import { GetProductsUseCase } from "../application/usecases/GetProducts.usecase.js";
-import { GenerateProductsUseCase } from "../application/usecases/GenerateProducts.usecase.js";
-
-import { GetProductsController } from "../interfaces/http/controllers/GetProductsController.js";
-import { GenerateProductsController } from "../interfaces/http/controllers/GenerateProductsController.js";
+import { PostgresWalletRepository } from "../infrastructure/db/postgres/PostgresWalletRepository.js";
+import { PostgresLedgerRepository } from "../infrastructure/db/postgres/PostgresLedgerRepository.js";
 
 import { UsecaseMetrics } from "../shared/UsecaseMetrics.js";
 import { RegisterUserUseCase } from "../application/usecases/RegisterUser.usecase.js";
@@ -15,23 +10,8 @@ import { RegisterUserController } from "../interfaces/http/controllers/registerU
 import { LoginUserUseCase } from "../application/usecases/LoginUser.usecase.js";
 import { LoginUserController } from "../interfaces/http/controllers/loginUserController.js";
 
-const productRepository = new MongoProductRepository();
-
-const rawGetProductsUseCase =
-  new GetProductsUseCase(productRepository);
-
-const getProductsUseCase =
-  new UsecaseMetrics(
-    rawGetProductsUseCase,
-    "GetProductsUseCase"
-  );
-export const getProductsController =
-  new GetProductsController(getProductsUseCase);
-
-
-const generateProductsUseCase = new GenerateProductsUseCase(productRepository);
-export const generateProductsController =
-  new GenerateProductsController(generateProductsUseCase);
+import { TransferFundsController } from "../interfaces/http/controllers/transferFundsController.js";
+import { TransferFundsUseCase } from "../application/usecases/TransferFunds.usecase.js";
 
 const userRepository = new PostgresUserRepository();
 const registerUserUseCase = new RegisterUserUseCase(userRepository);
@@ -41,3 +21,10 @@ export const registerUserController =
 const loginUserUseCase = new LoginUserUseCase(userRepository);
 export const loginUserController =
   new LoginUserController(loginUserUseCase);
+
+const walletRepository = new PostgresWalletRepository();
+const ledgerRepository = new PostgresLedgerRepository();
+const transferFundsUseCase = new TransferFundsUseCase(walletRepository, ledgerRepository);
+export const transferFundsController =
+  new TransferFundsController(transferFundsUseCase);
+
