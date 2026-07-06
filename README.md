@@ -1,33 +1,66 @@
-# Scale-Perform
+# Scale-Perform — Social Lending & Wallet App
 
-Scale-Perform is a TypeScript API built to experiment with backend scalability, database performance, pagination strategies, and observability. The project currently uses MongoDB for product storage and exposes metrics that can be scraped and visualized for performance analysis.
+A backend REST API for tracking informal loans between friends and settling them via in-app wallet transfers. Every settlement produces a verifiable ledger entry — no "mark as paid" shortcuts.
 
-The codebase follows a clean architecture style so HTTP handling, business rules, and persistence stay separated:
+Built as a structured learning project for fintech system design: atomicity, idempotency, audit trails, and debt lifecycle management.
 
-Client (HTTP)
--> Interfaces (controllers, routes)
--> Application (use cases)
--> Domain (entities, repository interfaces)
--> Infrastructure (MongoDB, schemas, DB connection, migrations)
+## What it does
 
-This separation makes it easier to change storage details, add performance experiments, and measure the impact of those changes without tightly coupling the app.
+- Users register and get a wallet automatically
+- **Lend**: User A tops up their wallet and transfers to User B — a debt is created (B owes A)
+- **Request**: User B requests money from A — A approves, transfer happens, debt is created
+- **External payment**: A paid for B outside the app (cash, UPI) — A records it, B confirms or disputes
+- **Settlement**: B can only settle via wallet transfer — no external "mark paid" option
+- **Reminders**: Month-end reminders to both lender (what you're owed) and borrower (what you owe)
+- **Withdrawal**: Users can transfer wallet balance to their bank account
 
-## What the project covers
+Ledger entries are immutable. Every money movement (top-up, transfer, withdrawal, settlement) is recorded.
 
-- Product listing APIs with filtering and cursor-based pagination
-- MongoDB query optimization using compound indexes
-- Prometheus metrics collection through `/metrics`
-- Local performance experiments and latency comparisons
-- Migration-based index management with `migrate-mongo`
+## Debt status lifecycle
+
+```
+PENDING_CONFIRMATION → ACTIVE → SETTLED
+PENDING_CONFIRMATION → DISPUTED  (terminal — manual resolution required)
+```
+
+Wallet-originated and request-approved debts skip confirmation and go straight to ACTIVE.
 
 ## Tech stack
 
-- Node.js
-- TypeScript
+- Node.js 24+ + TypeScript (strict mode, ESM)
 - Express
-- MongoDB
-- Mongoose
-- Prometheus client metrics
+- PostgreSQL + [Kysely](https://kysely.dev) — type-safe SQL query builder; chosen over raw SQL for compile-time query validation and over ORMs (Prisma, TypeORM) to keep full control of queries without hidden abstractions, which matters for financial data where query correctness is critical
+- MongoDB (connection infrastructure — available for future features)
+- JWT auth (jsonwebtoken + bcrypt)
+- Prometheus metrics (prom-client)
+
+## Architecture
+
+Clean Architecture — dependencies flow inward, domain knows nothing about infrastructure.
+
+```
+domain/         → entities and repository interfaces (pure TS, no deps)
+application/    → use cases (orchestrate domain + repositories)
+infrastructure/ → Kysely (PostgreSQL) and MongoDB connection
+interfaces/     → Express controllers and routes
+shared/         → DI container, AppError, JWT helper, metrics wrappers
+middleware/     → error handler, HTTP metrics, auth
+```
+
+### Domain model
+
+```
+users 1──* wallets 1──* ledger_entries
+users 1──* debts (as lender or borrower)
+users 1──* lending_requests (as requester or target)
+debts 1──1 ledger_entry (settlement reference)
+```
+
+Balance and amounts are stored as `varchar` (decimal string) — never as floating-point.
+
+### Dependency injection
+
+Manual, no framework. `src/shared/container.ts` wires repositories → use cases → controllers. Routes import from the container.
 
 ## Local setup
 
@@ -35,41 +68,27 @@ This separation makes it easier to change storage details, add performance exper
 
 - Node.js 24+
 - npm
-- A running MongoDB instance, local or remote
+- PostgreSQL instance (local or remote)
+- MongoDB instance (local or remote)
 
 ### Environment variables
 
-Create a `.env` file from `.env.example`.
-
-Current required values:
-
-- `PORT`
-- `MONGO_URI`
-- `DB_TYPE`
-
-Example:
+Copy `.env.example` and fill in the values:
 
 ```env
 PORT=5000
-MONGO_URI=mongodb://127.0.0.1:27017/scale_perform
-DB_TYPE=mongo
-```
-
-Optional local Postgres values for wallet/auth development:
-
-```env
 POSTGRES_HOST=127.0.0.1
 POSTGRES_PORT=5432
 POSTGRES_DB=scale_perform
 POSTGRES_USER=postgres
 POSTGRES_PASSWORD=your_password
+MONGO_URI=mongodb://127.0.0.1:27017/scale_perform
+JWT_SECRET=your_secret
 ```
 
-When registering the local server in pgAdmin, use the default `postgres`
-database as the maintenance database. The app database can then be created as
-`scale_perform`.
+When setting up PostgreSQL locally with pgAdmin:
 
-```text
+```
 Host: 127.0.0.1
 Port: 5432
 Maintenance database: postgres
@@ -77,103 +96,59 @@ Username: postgres
 App database: scale_perform
 ```
 
-### Install dependencies
+### Install and run
 
 ```bash
 npm install
+npm run dev       # TypeScript watch + nodemon
 ```
-
-### Run the app locally
 
 ```bash
-npm run dev
+npm run build     # compile to dist/
+npm run start     # serve compiled output
 ```
 
-This starts TypeScript watch mode and the local server. By default the API runs on:
+### Database migrations
 
-```text
-http://localhost:5000
-```
-
-### Build and run compiled output
+PostgreSQL (Kysely-based):
 
 ```bash
-npm run build
-npm run start
+npm run postgres:migrate
 ```
 
-`npm run start` serves the compiled app from `dist/`, so `npm run build` must run first.
-
-## Mongo migrations
-
-This project uses `migrate-mongo` for MongoDB migrations.
-
-Available commands:
-
-- `npm run migrate:status`
-- `npm run migrate:up`
-- `npm run migrate:down`
-
-These commands build the project first and then run migrations from:
-
-```text
-dist/infrastructure/db/mongo/migrations
-```
-
-Make sure `MONGO_URI` is set before running migrations.
-
-## Useful endpoints
-
-- `GET /health` returns server health information
-- `GET /metrics` exposes Prometheus metrics
-- `GET /api/products` returns product data with filters and cursor pagination
-
-## Local monitoring and load testing
-
-This project currently uses the following local tools during development:
-
-- MongoDB
-- Grafana Alloy
-- Grafana Cloud
-- k6
-
-### Current metrics setup
-
-- The API exposes Prometheus-format metrics at `GET /metrics`
-- Grafana Alloy scrapes the local metrics endpoint and forwards data to Grafana Cloud
-- A local Prometheus server is not required for the current setup
-
-### Load testing
-
-The repository includes a k6 script at:
-
-```text
-loadtest/products.js
-```
-
-Run it with:
+MongoDB:
 
 ```bash
-k6 run loadtest/products.js
+npm run migrate:up
+npm run migrate:down
 ```
+
+## API endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/api/register` | Register a new user (wallet auto-created) |
+| POST | `/api/login` | Login, returns JWT |
+| POST | `/api/transfer-funds` | Wallet-to-wallet transfer |
+| GET | `/health` | Server health check |
+| GET | `/metrics` | Prometheus metrics |
+
+More endpoints coming as debt and lending features are built.
+
+## Observability
+
+- `GET /metrics` exposes Prometheus-format metrics
+- `http_request_duration_seconds` — per route/method/status
+- `usecase_execution_duration_seconds` — per use case (via UsecaseMetrics decorator)
 
 ## Available scripts
 
-- `npm run dev` runs local development mode
-- `npm run build` compiles TypeScript into `dist/`
-- `npm run start` starts the compiled server
-- `npm run migrate:status` shows Mongo migration status
-- `npm run migrate:up` applies pending Mongo migrations
-- `npm run migrate:down` rolls back the latest Mongo migration
-- `npm run clean` removes the `dist/` folder
-
-## Notes on pagination
-
-The product listing API supports cursor-based pagination.
-
-- Default pagination can use `_id`
-- Price-sorted pagination uses a composite cursor:
-  - `lastSeenId`
-  - `lastPrice`
-
-This is required to keep pagination correct when sorting by price in ascending or descending order.
+| Script | Description |
+|--------|-------------|
+| `npm run dev` | Watch mode — compile + nodemon |
+| `npm run build` | Compile TypeScript to `dist/` |
+| `npm run start` | Start compiled server |
+| `npm run postgres:migrate` | Run PostgreSQL migrations |
+| `npm run migrate:up` | Apply pending MongoDB migrations |
+| `npm run migrate:down` | Roll back latest MongoDB migration |
+| `npm run clean` | Remove `dist/` folder |

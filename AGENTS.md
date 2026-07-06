@@ -4,7 +4,7 @@
 - Default to analysis, explanation, and suggested edits.
 - Ask the user before applying any patch, even for small fixes.
 
-# Project Context — Wallet & Payment Service
+# Project Context — Social Lending & Wallet App
 
 ## Project Owner
 Deepa — backend engineer running a structured self-directed learning project.
@@ -22,11 +22,44 @@ Deepa — backend engineer running a structured self-directed learning project.
 - No frontend, REST API only
 
 ## What the Service Does
-- Users have wallets
-- Money transfers between wallets
-- Full transaction history
-- Failure handling and idempotency
-- Immutable audit trail via ledger entries
+
+A social lending app where friends track debts and settle them via wallet. Every settlement produces a verifiable ledger entry — no "mark as paid" shortcuts.
+
+### Debt origins (three flows, one settlement path)
+
+**1. Wallet lend — A pushes money to B**
+A tops up wallet → A transfers to B → debt auto-created (ACTIVE, no confirmation needed — money already moved)
+
+**2. Lending request — B asks A for money**
+B creates request → A approves → wallet transfer happens → debt auto-created (ACTIVE)
+A rejects → request closed, nothing happens
+
+**3. External payment — A paid cash/UPI for B outside the app**
+A records "I paid £50 for B" → debt created (PENDING_CONFIRMATION)
+B confirms → debt becomes ACTIVE
+B disputes → debt becomes DISPUTED (manual resolution between users, no automation)
+
+### Settlement (all three flows converge here)
+Month-end: both lender and borrower receive reminders (lender sees what they're owed, borrower sees what they owe)
+B tops up wallet if needed → B transfers to A → debt marked SETTLED, ledger entry created
+A can then withdraw settled balance to bank
+
+### Debt statuses
+PENDING_CONFIRMATION → ACTIVE → SETTLED
+PENDING_CONFIRMATION → DISPUTED (terminal until manual resolution)
+
+### Wallet operations
+- Top-up (deposit funds into wallet — prerequisite for all transfers)
+- Wallet-to-wallet transfer (lending and settlement)
+- Withdrawal (wallet to bank)
+
+### Ledger
+Every money movement (top-up, transfer, withdrawal) produces an immutable ledger entry. Settlements reference the debt they close.
+
+### Future scope
+- UPI / payment gateway settlement
+- Group expense splitting
+- Subscription tracking
 
 ## How to Assist
 - Always explain WHY when making an architectural choice
