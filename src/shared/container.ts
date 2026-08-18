@@ -13,7 +13,7 @@ import { LoginUserController } from "../interfaces/http/controllers/loginUserCon
 import { TransferFundsController } from "../interfaces/http/controllers/transferFundsController.js";
 import { TransferFundsUseCase } from "../application/usecases/TransferFunds.usecase.js";
 
-const userRepository = new PostgresUserRepository();
+export const userRepository = new PostgresUserRepository();
 const registerUserUseCase = new RegisterUserUseCase(userRepository);
 export const registerUserController =
   new RegisterUserController(registerUserUseCase);

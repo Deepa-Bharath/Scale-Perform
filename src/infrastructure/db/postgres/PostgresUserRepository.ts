@@ -1,3 +1,4 @@
+import type { UUID } from "crypto";
 import type { CreateUserInput, PublicUser,User } from "../../../domain/entities/User.js";
 import type { UserRepository } from "../../../domain/repositories/UserRespository.js";
 import { db } from "./connection.js"
@@ -26,6 +27,11 @@ export class PostgresUserRepository implements UserRepository {
     async findByemailWithPasswordHash(email: string, password_hash: string): Promise<User | null> {
         const user = await db.selectFrom('users').where('email', '=', email).where('password_hash', '=', password_hash)
         .selectAll().executeTakeFirst();
+        return user || null;
+    }
+
+    async findById(userId: UUID): Promise<User | null> {
+        const user = await db.selectFrom('users').where('id', '=', userId).selectAll().executeTakeFirst();
         return user || null;
     }
 }
