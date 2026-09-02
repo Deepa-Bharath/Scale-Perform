@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Scale-Perform Wallet</title>
+<style>
+  :root {
+    --bg: #0f1420;
+    --surface: #171e2e;
+    --surface-2: #1e2740;
+    --border: #2a3554;
+    --text: #e8ecf4;
+    --text-dim: #8b95ad;
+    --accent: #4f7cff;
+    --accent-hover: #3d68e8;
+    --green: #34d399;
+    --red: #f87171;
+    --amber: #fbbf24;
+    --radius: 12px;
+    --shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+  button { font-family: inherit; cursor: pointer; }
+  input, select { font-family: inherit; }
+
+  /* ---------- Auth screen ---------- */
+  #auth-screen {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background:
+      radial-gradient(ellipse 60% 50% at 20% 10%, rgba(79, 124, 255, 0.18), transparent),
+      radial-gradient(ellipse 50% 40% at 85% 90%, rgba(52, 211, 153, 0.10), transparent),
+      var(--bg);
+  }
+  .auth-card {
+    width: 100%;
+    max-width: 420px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 36px 32px;
+    box-shadow: var(--shadow);
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 8px;
+  }
+  .brand-logo {
+    width: 38px; height: 38px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--accent), #7c5cff);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+  }
+  .brand h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; }
+  .auth-sub { text-align: center; color: var(--text-dim); font-size: 14px; margin-bottom: 28px; }
+
+  .tabs {
+    display: flex;
+    background: var(--bg);
+    border-radius: 10px;
+    padding: 4px;
+    margin-bottom: 24px;
+  }
+  .tabs button {
+    flex: 1;
+    padding: 9px;
+    border: none;
+    background: transparent;
+    color: var(--text-dim);
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.18s ease;
+  }
+  .tabs button.active { background: var(--surface-2); color: var(--text); }
+
+  .field { margin-bottom: 16px; }
+  .field label {
+    display: block;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .field input {
+    width: 100%;
+    padding: 11px 14px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    color: var(--text);
+    font-size: 14.5px;
+    outline: none;
+    transition: border-color 0.15s ease;
+  }
+  .field input:focus { border-color: var(--accent); }
+  .field .hint { font-size: 12px; color: var(--text-dim); margin-top: 5px; }
+
+  .btn {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 9px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 600;
+    transition: background 0.15s ease, transform 0.1s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .btn:hover { background: var(--accent-hover); }
+  .btn:active { transform: scale(0.98); }
+  .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+  .btn.secondary {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+  .btn.secondary:hover { background: var(--border); }
+
+  .spinner {
+    width: 16px; height: 16px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: none;
+  }
+  .btn.loading .spinner { display: inline-block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ---------- App shell ---------- */
+  #app-screen { display: none; min-height: 100vh; }
+  .shell { display: flex; min-height: 100vh; }
+
+  .sidebar {
+    width: 232px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 24px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+  }
+  .sidebar .brand { justify-content: flex-start; padding: 0 10px; margin-bottom: 28px; }
+  .sidebar .brand h1 { font-size: 17px; }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 11px 12px;
+    border: none;
+    background: transparent;
+    color: var(--text-dim);
+    border-radius: 9px;
+    font-size: 14px;
+    font-weight: 600;
+    text-align: left;
+    transition: all 0.15s ease;
+    width: 100%;
+  }
+  .nav-item:hover { background: var(--surface-2); color: var(--text); }
+  .nav-item.active { background: rgba(79, 124, 255, 0.14); color: var(--accent); }
+  .nav-item .icon { font-size: 17px; width: 22px; text-align: center; }
+  .sidebar-footer { margin-top: auto; }
+
+  .api-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+  .status-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--text-dim);
+    flex-shrink: 0;
+  }
+  .status-dot.up { background: var(--green); box-shadow: 0 0 6px var(--green); }
+  .status-dot.down { background: var(--red); }
+
+  .main {
+    flex: 1;
+    padding: 28px 36px;
+    max-width: 980px;
+    width: 100%;
+  }
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 28px;
+  }
+  .topbar h2 { font-size: 21px; font-weight: 700; letter-spacing: -0.01em; }
+  .user-chip {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 6px 14px 6px 6px;
+  }
+  .avatar {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), #7c5cff);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700; color: #fff;
+  }
+  .user-chip .name { font-size: 13.5px; font-weight: 600; }
+
+  /* ---------- Pages & cards ---------- */
+  .page { display: none; animation: fadeIn 0.25s ease; }
+  .page.active { display: block; }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+  .card h3 { font-size: 15px; font-weight: 700; margin-bottom: 16px; }
+
+  .balance-card {
+    background: linear-gradient(135deg, #2743a0 0%, #4f7cff 55%, #7c5cff 100%);
+    border: none;
+    position: relative;
+    overflow: hidden;
+  }
+  .balance-card::after {
+    content: "";
+    position: absolute;
+    right: -40px; top: -40px;
+    width: 180px; height: 180px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+  }
+  .balance-label { font-size: 12.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; opacity: 0.85; }
+  .balance-amount { font-size: 40px; font-weight: 800; letter-spacing: -0.02em; margin: 8px 0 4px; }
+  .balance-meta { font-size: 13px; opacity: 0.8; }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 760px) { .grid-2 { grid-template-columns: 1fr; } }
+
+  .quick-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+  .quick-actions .btn { width: auto; padding: 10px 20px; font-size: 14px; }
+
+  .id-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg);
+    border: 1px dashed var(--border);
+    border-radius: 9px;
+    padding: 10px 14px;
+    font-family: Consolas, monospace;
+    font-size: 12.5px;
+    color: var(--text-dim);
+    word-break: break-all;
+  }
+  .id-box .copy-btn {
+    background: none; border: none; color: var(--accent);
+    font-size: 12px; font-weight: 600; flex-shrink: 0;
+  }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  th {
+    text-align: left;
+    padding: 10px 12px;
+    color: var(--text-dim);
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid var(--border);
+  }
+  td { padding: 12px; border-bottom: 1px solid rgba(42, 53, 84, 0.5); }
+  tr:last-child td { border-bottom: none; }
+  .table-wrap { overflow-x: auto; }
+
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 11.5px;
+    font-weight: 700;
+  }
+  .badge.credit { background: rgba(52, 211, 153, 0.15); color: var(--green); }
+  .badge.debit { background: rgba(248, 113, 113, 0.15); color: var(--red); }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-dim);
+  }
+  .empty-state .big { font-size: 34px; margin-bottom: 10px; }
+  .empty-state p { font-size: 14px; line-height: 1.6; }
+  .empty-state code {
+    background: var(--bg);
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 12.5px;
+    color: var(--amber);
+  }
+
+  .pending-banner {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    background: rgba(251, 191, 36, 0.08);
+    border: 1px solid rgba(251, 191, 36, 0.25);
+    border-radius: 9px;
+    padding: 12px 14px;
+    font-size: 13px;
+    color: var(--amber);
+    line-height: 1.5;
+    margin-bottom: 16px;
+  }
+
+  /* ---------- Toasts ---------- */
+  #toasts {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 100;
+    max-width: 380px;
+  }
+  .toast {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--accent);
+    border-radius: 10px;
+    padding: 13px 16px;
+    font-size: 13.5px;
+    line-height: 1.5;
+    box-shadow: var(--shadow);
+    animation: slideIn 0.25s ease;
+  }
+  .toast.success { border-left-color: var(--green); }
+  .toast.error { border-left-color: var(--red); }
+  .toast .toast-title { font-weight: 700; margin-bottom: 2px; }
+  .toast .toast-body { color: var(--text-dim); }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(24px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  /* ---------- Mobile ---------- */
+  @media (max-width: 700px) {
+    .shell { flex-direction: column; }
+    .sidebar {
+      position: fixed;
+      bottom: 0; left: 0; right: 0; top: auto;
+      height: auto;
+      width: 100%;
+      flex-direction: row;
+      padding: 8px 10px;
+      border-right: none;
+      border-top: 1px solid var(--border);
+      z-index: 50;
+    }
+    .sidebar .brand, .sidebar-footer .api-status span { display: none; }
+    .sidebar-footer { margin: 0; }
+    .nav-item { flex-direction: column; gap: 3px; font-size: 10.5px; padding: 8px 4px; justify-content: center; text-align: center; }
+    .main { padding: 20px 16px 96px; }
+    .balance-amount { font-size: 32px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ AUTH ============ -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="brand">
+      <div class="brand-logo">💸</div>
+      <h1>Scale-Perform</h1>
+    </div>
+    <p class="auth-sub">Social lending &amp; wallet — dev console</p>
+
+    <div class="tabs">
+      <button id="tab-login" class="active" onclick="switchAuthTab('login')">Sign in</button>
+      <button id="tab-register" onclick="switchAuthTab('register')">Create account</button>
+    </div>
+
+    <form id="login-form" onsubmit="handleLogin(event)">
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="login-email" required autocomplete="email" placeholder="you@example.com" />
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="login-password" required autocomplete="current-password" placeholder="••••••••" />
+      </div>
+      <button type="submit" class="btn"><span class="spinner"></span>Sign in</button>
+    </form>
+
+    <form id="register-form" style="display:none" onsubmit="handleRegister(event)">
+      <div class="field">
+        <label>Name</label>
+        <input type="text" id="reg-name" required placeholder="Deepa" />
+      </div>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="reg-email" required autocomplete="email" placeholder="you@example.com" />
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="reg-password" required autocomplete="new-password" placeholder="min 8 characters" minlength="8" />
+      </div>
+      <button type="submit" class="btn"><span class="spinner"></span>Create account</button>
+    </form>
+  </div>
+</div>
+
+<!-- ============ APP ============ -->
+<div id="app-screen">
+  <div class="shell">
+    <nav class="sidebar">
+      <div class="brand">
+        <div class="brand-logo">💸</div>
+        <h1>Scale-Perform</h1>
+      </div>
+      <button class="nav-item active" data-page="dashboard" onclick="navigate('dashboard')">
+        <span class="icon">📊</span> Dashboard
+      </button>
+      <button class="nav-item" data-page="transfer" onclick="navigate('transfer')">
+        <span class="icon">↗️</span> Transfer
+      </button>
+      <button class="nav-item" data-page="ledger" onclick="navigate('ledger')">
+        <span class="icon">📒</span> Ledger
+      </button>
+      <div class="sidebar-footer">
+        <div class="api-status">
+          <div class="status-dot" id="api-dot"></div>
+          <span id="api-status-text">Checking API…</span>
+        </div>
+      </div>
+    </nav>
+
+    <main class="main">
+      <div class="topbar">
+        <h2 id="page-title">Dashboard</h2>
+        <div style="display:flex; gap:10px; align-items:center">
+          <div class="user-chip">
+            <div class="avatar" id="avatar">?</div>
+            <span class="name" id="user-name">—</span>
+          </div>
+          <button class="btn secondary" style="width:auto; padding:8px 16px; font-size:13px" onclick="logout()">Log out</button>
+        </div>
+      </div>
+
+      <!-- Dashboard -->
+      <section class="page active" id="page-dashboard">
+        <div class="card balance-card">
+          <div class="balance-label">Wallet balance</div>
+          <div class="balance-amount" id="balance-amount">₹ —</div>
+          <div class="balance-meta" id="balance-meta">Loading…</div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <h3>Quick actions</h3>
+            <div class="quick-actions">
+              <button class="btn" onclick="navigate('transfer')">↗️ Send money</button>
+              <button class="btn secondary" onclick="navigate('ledger')">📒 View ledger</button>
+            </div>
+          </div>
+          <div class="card">
+            <h3>Your account</h3>
+            <div class="field">
+              <label>User ID (share this to receive transfers)</label>
+              <div class="id-box">
+                <span id="my-user-id">—</span>
+                <button class="copy-btn" onclick="copyUserId()">Copy</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Recent activity</h3>
+          <div id="recent-activity"><div class="empty-state"><p>Loading…</p></div></div>
+        </div>
+      </section>
+
+      <!-- Transfer -->
+      <section class="page" id="page-transfer">
+        <div class="card" style="max-width: 560px">
+          <h3>Send money</h3>
+          <div class="pending-banner" id="transfer-banner" style="display:none">
+            ⚠️ <span>The <code>TransferFunds</code> use case on the backend is not finished yet —
+            requests will reach the API but the transfer logic is incomplete.</span>
+          </div>
+          <form onsubmit="handleTransfer(event)">
+            <div class="field">
+              <label>Receiver user ID</label>
+              <input type="text" id="tf-receiver" required placeholder="UUID of the receiving user" />
+            </div>
+            <div class="field">
+              <label>Amount (₹)</label>
+              <input type="number" id="tf-amount" required min="0.01" step="0.01" placeholder="25.00" />
+              <div class="hint">Sent to the API in paise (minor units) — e.g. ₹25.00 → 2500</div>
+            </div>
+            <div class="field">
+              <label>Description</label>
+              <input type="text" id="tf-description" required placeholder="Lunch settlement" maxlength="140" />
+            </div>
+            <div class="field">
+              <label>Reference ID (idempotency key — auto-generated)</label>
+              <div class="id-box">
+                <span id="tf-reference">—</span>
+                <button type="button" class="copy-btn" onclick="regenerateReference()">Regenerate</button>
+              </div>
+              <div class="hint">Retrying with the same reference must NOT double-spend. Test it!</div>
+            </div>
+            <button type="submit" class="btn"><span class="spinner"></span>Send transfer</button>
+          </form>
+        </div>
+      </section>
+
+      <!-- Ledger -->
+      <section class="page" id="page-ledger">
+        <div class="card">
+          <h3>Ledger entries</h3>
+          <div id="ledger-content"><div class="empty-state"><p>Loading…</p></div></div>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<div id="toasts"></div>
+
+<script>
+/* ============================================================
+   CONFIG — all backend endpoints in one place.
+   Balance and ledger endpoints don't exist on the backend yet;
+   when you build them, make the paths match (or edit these).
+   ============================================================ */
+const API_BASE = localStorage.getItem("sp_api_base") || "http://localhost:5000";
+const ENDPOINTS = {
+  health:   () => `${API_BASE}/health`,
+  register: () => `${API_BASE}/api/register`,
+  login:    () => `${API_BASE}/api/login`,
+  transfer: () => `${API_BASE}/api/transfer-funds`,
+  // "me" endpoints: the caller is identified by the JWT, never by a URL id, so a user
+  // cannot request anyone else's data. Build these two on the backend (auth-protected).
+  balance:  () => `${API_BASE}/api/wallets/me/balance`,   // ← build: caller's balance
+  ledger:   () => `${API_BASE}/api/wallets/me/ledger`,    // ← build: caller's ledger
+};
+
+/* ---------- Session ---------- */
+let session = null; // { user: {id, name, email}, token }
+
+// Session lives in sessionStorage (NOT localStorage) so every browser TAB is an
+// independent user: open Alice in one tab and Bob in another, each with its own token.
+function saveSession(s) {
+  session = s;
+  sessionStorage.setItem("sp_session", JSON.stringify(s));
+}
+function loadSession() {
+  try { session = JSON.parse(sessionStorage.getItem("sp_session")); } catch { session = null; }
+  return session;
+}
+function logout() {
+  sessionStorage.removeItem("sp_session");
+  session = null;
+  document.title = "Scale-Perform Wallet";
+  document.getElementById("app-screen").style.display = "none";
+  document.getElementById("auth-screen").style.display = "flex";
+}
+
+/* ---------- API helper ---------- */
+async function api(url, options = {}) {
+  const headers = { "Content-Type": "application/json", ...(options.headers || {}) };
+  if (session?.token) headers["Authorization"] = `Bearer ${session.token}`;
+
+  let res;
+  try {
+    res = await fetch(url, { ...options, headers });
+  } catch {
+    throw { network: true, message: "Cannot reach the API. Is the backend running on " + API_BASE + "?" };
+  }
+
+  let body = null;
+  try { body = await res.json(); } catch { /* non-JSON response */ }
+
+  if (!res.ok) {
+    throw {
+      statusCode: res.status,
+      notFound: res.status === 404,
+      message: body?.message || `Request failed (${res.status})`,
+    };
+  }
+  return body;
+}
+
+/* ---------- Toasts ---------- */
+function toast(type, title, body) {
+  const el = document.createElement("div");
+  el.className = `toast ${type}`;
+  el.innerHTML = `<div class="toast-title"></div><div class="toast-body"></div>`;
+  el.querySelector(".toast-title").textContent = title;
+  el.querySelector(".toast-body").textContent = body || "";
+  document.getElementById("toasts").appendChild(el);
+  setTimeout(() => el.remove(), 5000);
+}
+
+/* ---------- Money (INR — rupees & paise; 1 rupee = 100 paise) ---------- */
+function paiseToDisplay(paise) {
+  const n = BigInt(paise);
+  const rupees = n / 100n;
+  const rem = (n % 100n < 0n ? -(n % 100n) : n % 100n).toString().padStart(2, "0");
+  return `₹${rupees.toLocaleString("en-IN")}.${rem}`;
+}
+function rupeesToPaise(value) {
+  // avoid float maths: parse "25.50" textually
+  const [whole, frac = ""] = String(value).split(".");
+  return (BigInt(whole || 0) * 100n + BigInt(frac.padEnd(2, "0").slice(0, 2))).toString();
+}
+
+/* ---------- Auth ---------- */
+function switchAuthTab(tab) {
+  document.getElementById("tab-login").classList.toggle("active", tab === "login");
+  document.getElementById("tab-register").classList.toggle("active", tab === "register");
+  document.getElementById("login-form").style.display = tab === "login" ? "" : "none";
+  document.getElementById("register-form").style.display = tab === "register" ? "" : "none";
+}
+
+async function withLoading(form, fn) {
+  const btn = form.querySelector("button[type=submit]");
+  btn.classList.add("loading");
+  btn.disabled = true;
+  try { await fn(); } finally {
+    btn.classList.remove("loading");
+    btn.disabled = false;
+  }
+}
+
+async function handleLogin(e) {
+  e.preventDefault();
+  await withLoading(e.target, async () => {
+    try {
+      const res = await api(ENDPOINTS.login(), {
+        method: "POST",
+        body: JSON.stringify({
+          email: document.getElementById("login-email").value,
+          password: document.getElementById("login-password").value,
+        }),
+      });
+      saveSession(res.data);
+      toast("success", "Welcome back", res.message);
+      enterApp();
+    } catch (err) {
+      toast("error", "Login failed", err.message);
+    }
+  });
+}
+
+async function handleRegister(e) {
+  e.preventDefault();
+  await withLoading(e.target, async () => {
+    try {
+      const res = await api(ENDPOINTS.register(), {
+        method: "POST",
+        body: JSON.stringify({
+          name: document.getElementById("reg-name").value,
+          email: document.getElementById("reg-email").value,
+          password: document.getElementById("reg-password").value,
+        }),
+      });
+      saveSession(res.data);
+      toast("success", "Account created", res.message);
+      enterApp();
+    } catch (err) {
+      toast("error", "Registration failed", err.message);
+    }
+  });
+}
+
+/* ---------- App shell ---------- */
+function enterApp() {
+  document.getElementById("auth-screen").style.display = "none";
+  document.getElementById("app-screen").style.display = "block";
+  const u = session.user;
+  document.title = `${u.name} · Scale-Perform`; // distinguishes each tab in the browser tab bar
+  document.getElementById("user-name").textContent = u.name;
+  document.getElementById("avatar").textContent = (u.name || "?").trim()[0].toUpperCase();
+  document.getElementById("my-user-id").textContent = u.id;
+  regenerateReference();
+  navigate("dashboard");
+}
+
+const PAGE_TITLES = { dashboard: "Dashboard", transfer: "Send money", ledger: "Ledger" };
+
+function navigate(page) {
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  document.getElementById(`page-${page}`).classList.add("active");
+  document.querySelectorAll(".nav-item").forEach(n =>
+    n.classList.toggle("active", n.dataset.page === page));
+  document.getElementById("page-title").textContent = PAGE_TITLES[page];
+  if (page === "dashboard") { loadBalance(); loadRecentActivity(); }
+  if (page === "ledger") loadLedger();
+}
+
+function copyUserId() {
+  navigator.clipboard.writeText(session.user.id);
+  toast("success", "Copied", "Your user ID is on the clipboard.");
+}
+
+/* ---------- Balance ---------- */
+async function loadBalance() {
+  const amountEl = document.getElementById("balance-amount");
+  const metaEl = document.getElementById("balance-meta");
+  try {
+    const res = await api(ENDPOINTS.balance());
+    amountEl.textContent = paiseToDisplay(res.data.balance);
+    metaEl.textContent = `Wallet ${res.data.walletId ?? ""}`.trim();
+  } catch (err) {
+    amountEl.textContent = "₹ —";
+    metaEl.textContent = err.notFound
+      ? "Balance endpoint not built yet (GET /api/wallets/me/balance)"
+      : err.message;
+  }
+}
+
+/* ---------- Transfer ---------- */
+function regenerateReference() {
+  document.getElementById("tf-reference").textContent = crypto.randomUUID();
+}
+
+async function handleTransfer(e) {
+  e.preventDefault();
+  await withLoading(e.target, async () => {
+    try {
+      const res = await api(ENDPOINTS.transfer(), {
+        method: "POST",
+        body: JSON.stringify({
+          // Sender is NOT sent — the backend derives it from the JWT (req.user.id).
+          // amount goes as a NUMBER of minor units (paise); backend requires typeof === "number".
+          receiverUserId: document.getElementById("tf-receiver").value.trim(),
+          amount: Number(rupeesToPaise(document.getElementById("tf-amount").value)),
+          referenceId: document.getElementById("tf-reference").textContent,
+          description: document.getElementById("tf-description").value,
+        }),
+      });
+      toast("success", "Transfer sent", res.message);
+      regenerateReference(); // fresh idempotency key for the next transfer
+      loadBalance();
+    } catch (err) {
+      toast("error", "Transfer failed", err.message);
+    }
+  });
+}
+
+/* ---------- Ledger ---------- */
+function renderLedgerRows(entries) {
+  if (!entries?.length) {
+    return `<div class="empty-state"><div class="big">📭</div><p>No ledger entries yet.<br/>Make a transfer to create some.</p></div>`;
+  }
+  const rows = entries.map(en => `
+    <tr>
+      <td>${new Date(en.created_at ?? en.createdAt).toLocaleString()}</td>
+      <td><span class="badge ${String(en.type).toLowerCase()}">${en.type}</span></td>
+      <td style="font-weight:600">${paiseToDisplay(en.amount)}</td>
+      <td style="color:var(--text-dim)">${en.description ?? ""}</td>
+      <td style="font-family:Consolas,monospace; font-size:11.5px; color:var(--text-dim)">${en.reference_id ?? en.referenceId ?? ""}</td>
+    </tr>`).join("");
+  return `<div class="table-wrap"><table>
+    <thead><tr><th>Date</th><th>Type</th><th>Amount</th><th>Description</th><th>Reference</th></tr></thead>
+    <tbody>${rows}</tbody></table></div>`;
+}
+
+async function loadLedger() {
+  const el = document.getElementById("ledger-content");
+  try {
+    const res = await api(ENDPOINTS.ledger());
+    el.innerHTML = renderLedgerRows(res.data?.entries ?? res.data);
+  } catch (err) {
+    el.innerHTML = `<div class="empty-state"><div class="big">🚧</div><p>${
+      err.notFound
+        ? "Ledger endpoint not built yet.<br/>Expected: <code>GET /api/wallets/me/ledger</code>"
+        : err.message
+    }</p></div>`;
+  }
+}
+
+async function loadRecentActivity() {
+  const el = document.getElementById("recent-activity");
+  try {
+    const res = await api(ENDPOINTS.ledger());
+    const entries = (res.data?.entries ?? res.data ?? []).slice(0, 5);
+    el.innerHTML = renderLedgerRows(entries);
+  } catch (err) {
+    el.innerHTML = `<div class="empty-state"><p>${
+      err.notFound ? "Activity will appear here once the ledger endpoint exists." : err.message
+    }</p></div>`;
+  }
+}
+
+/* ---------- API health ---------- */
+async function checkHealth() {
+  const dot = document.getElementById("api-dot");
+  const text = document.getElementById("api-status-text");
+  try {
+    await api(ENDPOINTS.health());
+    dot.className = "status-dot up";
+    text.textContent = "API online";
+  } catch {
+    dot.className = "status-dot down";
+    text.textContent = "API unreachable";
+  }
+}
+
+/* ---------- Boot ---------- */
+if (loadSession()?.token) enterApp();
+checkHealth();
+setInterval(checkHealth, 15000);
+</script>
+</body>
+</html>
