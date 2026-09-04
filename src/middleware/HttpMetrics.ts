@@ -25,7 +25,7 @@ export function httpMetrics(
 
   res.on("finish", () => {
     end({
-      route: req.route?.path || req.path,
+      route: req.route?.path ?? "unmatched",
       status: res.statusCode,
     });
   });
